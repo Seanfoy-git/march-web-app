@@ -40,36 +40,52 @@ export default function ViewSOPPage({ params }: { params: { id: string } }) {
   }, [params.id, router]);
 
   // Generate and download a PDF of the SOP
-  // Inside ViewSOPPage.tsx, update the exportToPDF function:
-const exportToPDF = async () => {
+  const exportToPDF = () => {
     if (!sop) return;
     
+    if (!sop.metadata.title) {
+      alert('Please add a SOP title');
+      return;
+    }
+    
+    if (sop.steps.length === 0) {
+      alert('Please add at least one step');
+      return;
+    }
+    
+    createAndDownloadSopPdf(sop.metadata, sop.steps);
+  };
+
+  // Refresh data and export PDF
+  const refreshAndExportPDF = async () => {
     try {
-      // Show loading message
-      alert("Fetching latest data for PDF generation...");
+      // Show loading
+      alert("Refreshing data before generating PDF...");
       
-      // Explicitly fetch the latest version from the database
+      // Explicitly fetch fresh data
       const docRef = doc(db, 'sops', params.id);
       const docSnap = await getDoc(docRef);
       
       if (docSnap.exists()) {
-        const latestSop = {
+        const freshData = {
           id: docSnap.id,
           ...docSnap.data()
         } as SOP;
         
-        console.log("Generating PDF with data:", latestSop);
+        // Update the local state
+        setSop(freshData);
         
-        // Generate PDF with the latest data
-        createAndDownloadSopPdf(latestSop.metadata, latestSop.steps);
+        // Generate PDF directly from the fresh data
+        createAndDownloadSopPdf(freshData.metadata, freshData.steps);
       } else {
-        alert('Could not find the latest version of this SOP');
+        alert("SOP not found!");
       }
     } catch (error) {
-      console.error('Error fetching latest SOP data:', error);
-      alert('Failed to fetch the latest data. Please try again.');
+      console.error("Error refreshing data:", error);
+      alert("Failed to refresh data. Please try again.");
     }
   };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -102,10 +118,10 @@ const exportToPDF = async () => {
                 Back to List
               </button>
               <button
-                onClick={exportToPDF}
+                onClick={refreshAndExportPDF}
                 className="px-4 py-2 border border-indigo-300 rounded-md text-sm font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100"
               >
-                Export PDF
+                Refresh & Export PDF
               </button>
               <button
                 onClick={() => router.push(`/sop/edit/${sop.id}`)}
