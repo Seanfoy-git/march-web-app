@@ -58,8 +58,8 @@ export default function PDFViewPage() {
     return <div className="flex items-center justify-center min-h-screen">No SOP data provided.</div>;
   }
 
-  // Generate a unique document ID
-  const documentId = `SOP_${metadata.title.substring(0, 5).replace(/\s+/g, '_')}_${Date.now().toString().substring(8, 13)}`;
+  // Generate a unique document ID  commented out as seems to be unused
+  //const documentId = `SOP_${metadata.title.substring(0, 5).replace(/\s+/g, '_')}_${Date.now().toString().substring(8, 13)}`;
 
   return (
     <div className="bg-white p-4 mx-auto max-w-[1000px] print:p-0">
