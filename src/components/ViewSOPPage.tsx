@@ -39,23 +39,6 @@ export default function ViewSOPPage({ params }: { params: { id: string } }) {
     fetchSOP();
   }, [params.id, router]);
 
-  // Generate and download a PDF of the SOP
-  const exportToPDF = () => {
-    if (!sop) return;
-    
-    if (!sop.metadata.title) {
-      alert('Please add a SOP title');
-      return;
-    }
-    
-    if (sop.steps.length === 0) {
-      alert('Please add at least one step');
-      return;
-    }
-    
-    createAndDownloadSopPdf(sop.metadata, sop.steps);
-  };
-
   // Refresh data and export PDF
   const refreshAndExportPDF = async () => {
     try {
