@@ -280,12 +280,8 @@ export default function NewSOPPage() {
   };
 
   // Generate and download a PDF of the SOP
- // In src/components/NewSOPPage.tsx, src/components/EditSOPPage.tsx, and src/components/ViewSOPPage.tsx
+ 
 
-// First, add the import:
-import { createAndDownloadSopPdf } from '@/utils/pdfUtils';
-
-// Then, replace the existing exportToPDF function with this simpler version:
 const exportToPDF = () => {
   if (!metadata.title) {
     alert('Please add a SOP title');
