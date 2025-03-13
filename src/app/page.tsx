@@ -1,103 +1,179 @@
-import Image from "next/image";
+// src/app/page.tsx
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import type { SOP } from '@/types/sop';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const router = useRouter();
+  const [sops, setSops] = useState<SOP[]>([]);
+  const [loading, setLoading] = useState(true);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  // Fetch SOPs from Firestore
+  const fetchSOPs = async () => {
+    setLoading(true);
+    try {
+      const querySnapshot = await getDocs(collection(db, 'sops'));
+      const sopList: SOP[] = [];
+      
+      querySnapshot.forEach((doc) => {
+        sopList.push({
+          id: doc.id,
+          ...doc.data()
+        } as SOP);
+      });
+      
+      // Sort by creation date (newest first)
+      sopList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      
+      setSops(sopList);
+    } catch (error) {
+      console.error('Error fetching SOPs:', error);
+      alert('Failed to load SOPs. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Delete an SOP
+  const deleteSOP = async (id: string) => {
+    if (confirm('Are you sure you want to delete this SOP?')) {
+      try {
+        await deleteDoc(doc(db, 'sops', id));
+        setSops(sops.filter(sop => sop.id !== id));
+        alert('SOP deleted successfully');
+      } catch (error) {
+        console.error('Error deleting SOP:', error);
+        alert('Failed to delete SOP. Please try again.');
+      }
+    }
+  };
+
+  useEffect(() => {
+    fetchSOPs();
+  }, []);
+
+  // Clone an existing SOP
+  const cloneSOP = (sop: SOP) => {
+    // Store SOP data in session storage
+    sessionStorage.setItem('cloneSOP', JSON.stringify({
+      metadata: {
+        ...sop.metadata,
+        title: `${sop.metadata.title} (Copy)`,
+        createdDate: new Date().toISOString().split('T')[0],
+        approvalDate: '',
+        version: '1.0'
+      },
+      steps: sop.steps
+    }));
+    
+    router.push('/sop/new');
+  };
+
+  return (
+    <main className="min-h-screen bg-gray-100">
+      <div className="bg-white shadow">
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold text-gray-900">Standard Operating Procedures</h1>
+            <button
+              onClick={() => router.push('/sop/new')}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+            >
+              Create New SOP
+            </button>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        {loading ? (
+          <div className="text-center py-10">
+            <svg className="animate-spin h-10 w-10 text-indigo-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p className="mt-2 text-gray-600">Loading SOPs...</p>
+          </div>
+        ) : sops.length === 0 ? (
+          <div className="bg-white rounded-lg shadow p-6 text-center">
+            <h2 className="text-xl font-medium text-gray-900 mb-4">No SOPs Found</h2>
+            <p className="text-gray-600 mb-6">Get started by creating your first SOP</p>
+            <button
+              onClick={() => router.push('/sop/new')}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+            >
+              Create New SOP
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {sops.map((sop) => (
+              <div key={sop.id} className="bg-white rounded-lg shadow overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h2 className="text-xl font-bold text-gray-900 truncate">
+                    {sop.metadata.title}
+                  </h2>
+                  <p className="text-sm text-gray-600">
+                    Version {sop.metadata.version} • {new Date(sop.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+                
+                <div className="px-6 py-3">
+                  <div className="flex flex-col">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm font-medium text-gray-700">Department:</span>
+                      <span className="text-sm text-gray-600">{sop.metadata.department}</span>
+                    </div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm font-medium text-gray-700">Author:</span>
+                      <span className="text-sm text-gray-600">{sop.metadata.author}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-gray-700">Steps:</span>
+                      <span className="text-sm text-gray-600">{sop.steps.length}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="px-6 py-4 bg-gray-50 flex justify-between">
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => router.push(`/sop/view/${sop.id}`)}
+                      className="px-3 py-1 text-sm bg-indigo-50 text-indigo-700 rounded hover:bg-indigo-100"
+                    >
+                      View
+                    </button>
+                    <button
+                      onClick={() => router.push(`/sop/edit/${sop.id}`)}
+                      className="px-3 py-1 text-sm bg-amber-50 text-amber-700 rounded hover:bg-amber-100"
+                    >
+                      Edit
+                    </button>
+                  </div>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => cloneSOP(sop)}
+                      className="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                    >
+                      Clone
+                    </button>
+                    <button
+                      onClick={() => deleteSOP(sop.id)}
+                      className="px-3 py-1 text-sm bg-red-50 text-red-700 rounded hover:bg-red-100"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </main>
   );
 }
