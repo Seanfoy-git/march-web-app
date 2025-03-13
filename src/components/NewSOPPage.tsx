@@ -7,6 +7,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { collection, addDoc } from 'firebase/firestore';
 import { storage, db } from '@/lib/firebase';
 import type { SOPMetadata, Step } from '@/types/sop';
+import { createAndDownloadSopPdf } from '@/utils/pdfUtils';
 
 export default function NewSOPPage() {
   const router = useRouter();
