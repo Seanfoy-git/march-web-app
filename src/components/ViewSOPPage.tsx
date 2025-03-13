@@ -3,8 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getDoc, doc } from 'firebase/firestore';
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
 import { db } from '@/lib/firebase';
 import type { SOP } from '@/types/sop';
 import { createAndDownloadSopPdf } from '@/utils/pdfUtils';

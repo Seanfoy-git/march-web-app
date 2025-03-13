@@ -4,8 +4,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
 import { storage, db } from '@/lib/firebase';
 import type { SOPMetadata, Step, SOP } from '@/types/sop';
 import { createAndDownloadSopPdf } from '@/utils/pdfUtils';
