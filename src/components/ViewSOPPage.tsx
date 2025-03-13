@@ -43,6 +43,8 @@ export default function ViewSOPPage({ params }: { params: { id: string } }) {
   const exportToPDF = async () => {
     if (!sop) return;
     
+    console.log("Original SOP data for PDF:", JSON.stringify(sop));
+    
     try {
       // Fetch the latest version from the database
       const docRef = doc(db, 'sops', params.id);
@@ -53,6 +55,8 @@ export default function ViewSOPPage({ params }: { params: { id: string } }) {
           id: docSnap.id,
           ...docSnap.data()
         } as SOP;
+        
+        console.log("Latest SOP data from database:", JSON.stringify(latestSop));
         
         // Generate PDF with the latest data
         createAndDownloadSopPdf(latestSop.metadata, latestSop.steps);
