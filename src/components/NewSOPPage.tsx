@@ -280,7 +280,7 @@ export default function NewSOPPage() {
   };
 
   // Generate and download a PDF of the SOP
-  const exportToPDF = () => {
+  const exportToPDF = async () => {
     if (!metadata.title) {
       alert('Please add a SOP title');
       return;

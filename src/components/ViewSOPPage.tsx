@@ -41,7 +41,7 @@ export default function ViewSOPPage({ params }: { params: { id: string } }) {
   }, [params.id, router]);
 
   // Generate and download a PDF of the SOP
-  const exportToPDF = () => {
+  const exportToPDF = async () => {
     if (!sop) return;
     
     const doc = new jsPDF();
