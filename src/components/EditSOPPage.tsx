@@ -8,6 +8,7 @@ import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import { storage, db } from '@/lib/firebase';
 import type { SOPMetadata, Step, SOP } from '@/types/sop';
+import { createAndDownloadSopPdf } from '@/utils/pdfUtils';
 
 export default function EditSOPPage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -319,77 +320,25 @@ export default function EditSOPPage({ params }: { params: { id: string } }) {
   };
 
   // Generate and download a PDF of the SOP
-  const exportToPDF = async () => {
-    if (!metadata.title) {
-      alert('Please add a SOP title');
-      return;
-    }
-    
-    if (steps.length === 0) {
-      alert('Please add at least one step');
-      return;
-    }
-    
-    const doc = new jsPDF();
-    
-    // Add title
-    doc.setFontSize(20);
-    doc.text(metadata.title, 105, 20, { align: 'center' });
-    
-    // Add metadata
-    doc.setFontSize(12);
-    doc.text(`Author: ${metadata.author}`, 14, 40);
-    doc.text(`Department: ${metadata.department}`, 14, 48);
-    doc.text(`Approver: ${metadata.approver}`, 14, 56);
-    doc.text(`Created: ${metadata.createdDate}`, 14, 64);
-    doc.text(`Approved: ${metadata.approvalDate || 'Pending'}`, 14, 72);
-    doc.text(`Version: ${metadata.version}`, 14, 80);
-    
-    // Add line
-    doc.line(14, 85, 196, 85);
-    
-    let yPosition = 100;
-    
-    // Add steps
-    steps.forEach((step, index) => {
-      // Check if we need a new page
-      if (yPosition > 250) {
-        doc.addPage();
-        yPosition = 20;
-      }
-      
-      doc.setFontSize(16);
-      doc.text(`Step ${index + 1}: ${step.title}`, 14, yPosition);
-      yPosition += 10;
-      
-      if (step.description) {
-        doc.setFontSize(12);
-        
-        // Split long descriptions
-        const splitDescription = doc.splitTextToSize(step.description, 180);
-        doc.text(splitDescription, 14, yPosition);
-        yPosition += splitDescription.length * 7;
-      }
-      
-      // Add image if present
-      if (step.imageUrl) {
-        try {
-          doc.addImage(step.imageUrl, 'JPEG', 14, yPosition, 120, 80);
-          yPosition += 90;
-        } catch (error) {
-          console.error('Error adding image to PDF:', error);
-          yPosition += 10;
-          doc.text('[Image could not be added]', 14, yPosition);
-          yPosition += 10;
-        }
-      }
-      
-      yPosition += 20;
-    });
-    
-    // Save the PDF
-    doc.save(`${metadata.title.replace(/\s+/g, '_')}_SOP.pdf`);
-  };
+  // In src/components/NewSOPPage.tsx, src/components/EditSOPPage.tsx, and src/components/ViewSOPPage.tsx
+
+// First, add the import:
+import { createAndDownloadSopPdf } from '@/utils/pdfUtils';
+
+// Then, replace the existing exportToPDF function with this simpler version:
+const exportToPDF = () => {
+  if (!metadata.title) {
+    alert('Please add a SOP title');
+    return;
+  }
+  
+  if (steps.length === 0) {
+    alert('Please add at least one step');
+    return;
+  }
+  
+  createAndDownloadSopPdf(metadata, steps);
+};
 
   // Initialize and cleanup camera
   useEffect(() => {
