@@ -40,13 +40,15 @@ export default function ViewSOPPage({ params }: { params: { id: string } }) {
   }, [params.id, router]);
 
   // Generate and download a PDF of the SOP
-  const exportToPDF = async () => {
+  // Inside ViewSOPPage.tsx, update the exportToPDF function:
+const exportToPDF = async () => {
     if (!sop) return;
     
-    console.log("Original SOP data for PDF:", JSON.stringify(sop));
-    
     try {
-      // Fetch the latest version from the database
+      // Show loading message
+      alert("Fetching latest data for PDF generation...");
+      
+      // Explicitly fetch the latest version from the database
       const docRef = doc(db, 'sops', params.id);
       const docSnap = await getDoc(docRef);
       
@@ -56,7 +58,7 @@ export default function ViewSOPPage({ params }: { params: { id: string } }) {
           ...docSnap.data()
         } as SOP;
         
-        console.log("Latest SOP data from database:", JSON.stringify(latestSop));
+        console.log("Generating PDF with data:", latestSop);
         
         // Generate PDF with the latest data
         createAndDownloadSopPdf(latestSop.metadata, latestSop.steps);
@@ -65,8 +67,7 @@ export default function ViewSOPPage({ params }: { params: { id: string } }) {
       }
     } catch (error) {
       console.error('Error fetching latest SOP data:', error);
-      alert('Failed to fetch the latest data. Using current version for PDF.');
-      createAndDownloadSopPdf(sop.metadata, sop.steps);
+      alert('Failed to fetch the latest data. Please try again.');
     }
   };
   if (loading) {

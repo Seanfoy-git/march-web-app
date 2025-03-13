@@ -321,7 +321,8 @@ export default function EditSOPPage({ params }: { params: { id: string } }) {
  
 
 
-  const exportToPDF = async () => {
+  // Inside EditSOPPage.tsx, update the exportToPDF function:
+const exportToPDF = async () => {
     if (!metadata.title) {
       alert('Please add a SOP title');
       return;
@@ -332,16 +333,21 @@ export default function EditSOPPage({ params }: { params: { id: string } }) {
       return;
     }
     
-    // First save any pending changes
     try {
-      setIsSaving(true);
+      // Show loading message
+      alert("Saving and preparing PDF...");
       
-      // Save the current state to the database
+      // First save the current state to ensure we have the latest data
+      setIsSaving(true);
       await updateDoc(doc(db, 'sops', params.id), {
         metadata,
         steps,
         updatedAt: new Date().toISOString()
       });
+      setIsSaving(false);
+      
+      // Wait a moment to ensure data is saved
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Fetch the latest version to ensure we have the most up-to-date data
       const docRef = doc(db, 'sops', params.id);
@@ -353,18 +359,16 @@ export default function EditSOPPage({ params }: { params: { id: string } }) {
           ...docSnap.data()
         } as SOP;
         
+        console.log("Generating PDF with latest data:", latestSop);
+        
         // Generate PDF with the latest data
         createAndDownloadSopPdf(latestSop.metadata, latestSop.steps);
       } else {
-        // Fallback to current state if we can't fetch the latest
-        createAndDownloadSopPdf(metadata, steps);
+        alert('Error: Could not fetch the updated SOP data');
       }
     } catch (error) {
-      console.error('Error updating/fetching SOP:', error);
-      alert('Failed to update/fetch latest data. Using current version for PDF.');
-      createAndDownloadSopPdf(metadata, steps);
-    } finally {
-      setIsSaving(false);
+      console.error('Error preparing PDF:', error);
+      alert('Failed to prepare PDF. Please try again.');
     }
   };
 
