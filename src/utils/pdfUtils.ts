@@ -1,4 +1,4 @@
-// src/utils/pdfUtils.ts
+// src/utils/pdfUtils.ts (ESLint Fixed)
 import { jsPDF } from 'jspdf';
 // Import autoTable as an ES module and attach it to jsPDF
 import { applyPlugin } from 'jspdf-autotable';
@@ -93,7 +93,7 @@ export const generateSOPPdf = async (metadata: SOPMetadata, steps: Step[]): Prom
     });
     
     // Add legend manually since it's simpler
-    let legendY = 70; // Approximate position after the header table
+    const legendY = 70; // Fixed position after the header table (ESLint fix: changed let to const)
     
     doc.setFontSize(9);
     doc.text('Legend:', margin + 5, legendY + 5);
