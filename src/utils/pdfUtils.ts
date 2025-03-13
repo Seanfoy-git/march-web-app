@@ -3,10 +3,24 @@ import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import { SOPMetadata, Step } from '@/types/sop';
 
+// Define types for jspdf-autotable
+interface AutoTableOptions {
+  startY?: number;
+  head?: unknown[][];
+  body: unknown[][];
+  theme?: string;
+  tableWidth?: number | string;
+  margin?: { left: number; right: number };
+  styles?: Record<string, unknown>;
+  columnStyles?: Record<string, unknown>;
+  didDrawCell?: (data: { column: { dataKey: string }; row: { index: number; section: string }; cell: { x: number; y: number; width: number; height: number } }) => void;
+}
+
 // Add autoTable to jsPDF type
 declare module 'jspdf' {
   interface jsPDF {
-    autoTable: (options: any) => any;
+    autoTable: (options: AutoTableOptions) => { finalY: number };
+    lastAutoTable?: { finalY: number };
   }
 }
 
@@ -111,19 +125,8 @@ export const generateSOPPdf = async (metadata: SOPMetadata, steps: Step[]): Prom
   doc.circle(margin + 120, legendY + 5, 3, 'F');
   doc.text('Correctness', margin + 125, legendY + 6);
   
-  // Main table with steps
-  const columns = [
-    'No.',
-    'Major steps (What)',
-    'Key points (How)',
-    'Symbol',
-    'Reasons for key points (Why)',
-    'Obligatory',
-    'Pictures'
-  ];
-  
-  // Create data rows for the table
-  const rows = steps.map((step, index) => {
+  // Main table with steps - using arrays directly for better type safety
+  const rows: unknown[][] = steps.map((step, index) => {
     // Format key points
     const keyPointsText = step.description 
       ? `1. ${step.description.substring(0, 200)}` 
@@ -147,7 +150,7 @@ export const generateSOPPdf = async (metadata: SOPMetadata, steps: Step[]): Prom
   // Create the main table
   doc.autoTable({
     startY: legendY + 10,
-    head: [columns],
+    head: [['No.', 'Major steps (What)', 'Key points (How)', 'Symbol', 'Reasons for key points (Why)', 'Obligatory', 'Pictures']],
     body: rows,
     theme: 'grid',
     tableWidth: usableWidth,
