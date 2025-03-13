@@ -58,6 +58,9 @@ export default function PDFViewPage() {
     return <div className="flex items-center justify-center min-h-screen">No SOP data provided.</div>;
   }
 
+  // Generate a unique document ID
+  const documentId = `SOP_${metadata.title.substring(0, 5).replace(/\s+/g, '_')}_${Date.now().toString().substring(8, 13)}`;
+
   return (
     <div className="bg-white p-4 mx-auto max-w-[1000px] print:p-0">
       {/* Print button - only shows on screen, not in print */}
@@ -81,31 +84,23 @@ export default function PDFViewPage() {
         <div className="grid grid-cols-3 gap-0 mb-6 border border-gray-300">
           <div className="col-span-3 grid grid-cols-3 border-b border-gray-300">
             <div className="border-r border-gray-300 p-2">
-              <p className="text-sm font-semibold">Template No.:</p>
-              <p className="text-sm">{`SOP_${metadata.title.substring(0, 10)}`}</p>
-            </div>
-            <div className="border-r border-gray-300 p-2">
               <p className="text-sm font-semibold">Department</p>
               <p className="text-sm">{metadata.department || 'Department'}</p>
             </div>
-            <div className="p-2">
+            <div className="border-r border-gray-300 p-2">
               <p className="text-sm font-semibold">Area</p>
               <p className="text-sm">Production</p>
-            </div>
-          </div>
-          
-          <div className="col-span-3 grid grid-cols-3 border-b border-gray-300">
-            <div className="border-r border-gray-300 p-2">
-              <p className="text-sm font-semibold">Operation</p>
-              <p className="text-sm">{metadata.title}</p>
-            </div>
-            <div className="border-r border-gray-300 p-2">
-              <p className="text-sm font-semibold">Instruction no.:</p>
-              <p className="text-sm">{`SOP_${Date.now().toString().substring(5, 10)}`}</p>
             </div>
             <div className="p-2">
               <p className="text-sm font-semibold">Version</p>
               <p className="text-sm">{metadata.version || '1.0'}</p>
+            </div>
+          </div>
+          
+          <div className="col-span-3 grid grid-cols-1 border-b border-gray-300">
+            <div className="p-2">
+              <p className="text-sm font-semibold">Operation</p>
+              <p className="text-sm">{metadata.title}</p>
             </div>
           </div>
           
@@ -152,7 +147,6 @@ export default function PDFViewPage() {
               <th className="border border-gray-300 p-2 w-60 text-sm text-left bg-gray-100">Key points (How)</th>
               <th className="border border-gray-300 p-2 w-12 text-sm text-center bg-gray-100">Symbol</th>
               <th className="border border-gray-300 p-2 text-sm text-left bg-gray-100">Reasons for key points (Why)</th>
-              <th className="border border-gray-300 p-2 w-12 text-sm text-center bg-gray-100">Obligatory</th>
               <th className="border border-gray-300 p-2 w-40 text-sm text-center bg-gray-100">Pictures</th>
             </tr>
           </thead>
@@ -185,12 +179,9 @@ export default function PDFViewPage() {
                     <p>Ensure quality</p>
                   </td>
                   <td className="border border-gray-300 p-2 text-center align-top">
-                    <div className="w-4 h-4 rounded-full mx-auto bg-blue-500"></div>
-                  </td>
-                  <td className="border border-gray-300 p-2 text-center align-top">
                     <p className="font-bold">{index + 1}.1</p>
                     {step.imageUrl ? (
-                      <div className="w-32 h-20 mx-auto relative">
+                      <div className="w-32 h-24 mx-auto relative">
                         <img 
                           src={step.imageUrl} 
                           alt={`Step ${index + 1}`}

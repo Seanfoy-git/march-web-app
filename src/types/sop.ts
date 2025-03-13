@@ -9,11 +9,15 @@ export interface SOPMetadata {
     version: string;
   }
   
+  export type SymbolType = 'quality' | 'correctness' | 'tip' | 'hazard';
+  
   export interface Step {
-    title: string;
-    description: string;
-    imageUrl: string;
-    imageName: string;
+    title: string;           // Major step (What)
+    description: string;     // Key points (How)
+    symbolType?: SymbolType; // Symbol type
+    reasonWhy?: string;      // Reasons for key points (Why)
+    imageUrl: string;        // Picture URL
+    imageName: string;       // For reference
   }
   
   export interface SOP {
