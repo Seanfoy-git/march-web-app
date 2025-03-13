@@ -40,9 +40,12 @@ export const generateSOPPdf = async (metadata: SOPMetadata, steps: Step[]): Prom
   doc.setFontSize(16);
   doc.text('Work Instruction', pageWidth / 2, margin + 8, { align: 'center' });
   
+  // Generate a formular number
+  const formularNr = Date.now().toString().substring(5, 13);
+  
   // Add header table
   const headerData = [
-    [{ content: 'Operation: ' + metadata.title, colSpan: 3 }, 'Formular nr', metadata.id || '99934520'],
+    [{ content: 'Operation: ' + metadata.title, colSpan: 3 }, 'Formular nr', formularNr],
     [{ content: 'Line/Project', rowSpan: 2 }, 'Training room', 'Product name', 'Work station', 'Training room', 'Prepared by', metadata.author || 'SOP Author'],
     ['Cycle Time (s)', '11s', 'Supervision:', 'Leader', 'Checked', metadata.approver || ''],
     ['PROFILES (PARTS)', { content: 'Production materials (Tools)', colSpan: 3 }, 'Version', metadata.version || '1.0'],
