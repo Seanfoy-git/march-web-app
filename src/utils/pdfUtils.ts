@@ -3,6 +3,13 @@ import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import { SOPMetadata, Step } from '@/types/sop';
 
+// Add autoTable to jsPDF type
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: (options: any) => any;
+  }
+}
+
 /**
  * Creates a professional SOP PDF document with proper layout
  * @param metadata SOP metadata information
@@ -52,6 +59,7 @@ export const generateSOPPdf = async (metadata: SOPMetadata, steps: Step[]): Prom
     [{ content: 'The knot', colSpan: 2 }, { content: 'Knots', colSpan: 2 }, { content: 'Compound', colSpan: 2 }]
   ];
 
+  // Create the header table
   doc.autoTable({
     startY: margin + 12,
     head: [],
@@ -71,8 +79,9 @@ export const generateSOPPdf = async (metadata: SOPMetadata, steps: Step[]): Prom
     }
   });
   
-  // Add legend
-  const legendY = doc.autoTable.previous.finalY + 5;
+  // Add legend section
+  const lastY = doc.lastAutoTable?.finalY || (margin + 45);
+  const legendY = lastY + 5;
   
   doc.setFontSize(9);
   doc.text('Legend:', margin + 5, legendY + 5);
@@ -104,57 +113,42 @@ export const generateSOPPdf = async (metadata: SOPMetadata, steps: Step[]): Prom
   
   // Main table with steps
   const columns = [
-    { header: 'No.', dataKey: 'no', width: 15 },
-    { header: 'Major steps (What)', dataKey: 'step', width: 50 },
-    { header: 'Key points (How)', dataKey: 'keyPoints', width: 60 },
-    { header: 'Symbol', dataKey: 'symbol', width: 15 },
-    { header: 'Reasons for key points (Why)', dataKey: 'reasons', width: 60 },
-    { header: 'Obligatory', dataKey: 'obligatory', width: 20 },
-    { header: 'Pictures', dataKey: 'pictures', width: 40 }
+    'No.',
+    'Major steps (What)',
+    'Key points (How)',
+    'Symbol',
+    'Reasons for key points (Why)',
+    'Obligatory',
+    'Pictures'
   ];
   
+  // Create data rows for the table
   const rows = steps.map((step, index) => {
-    // Determine which symbol to use
-    let symbolCell = '';
-    let symbolColor = '#000000';
-    
-    if (index % 3 === 0) {
-      symbolCell = '●';
-      symbolColor = '#FF0000'; // Red for quality
-    } else if (index % 3 === 1) {
-      symbolCell = '●';
-      symbolColor = '#000000'; // Black for correctness
-    } else {
-      symbolCell = '✓';
-      symbolColor = '#000000'; // Black checkmark for tip
-    }
-    
     // Format key points
     const keyPointsText = step.description 
       ? `1. ${step.description.substring(0, 200)}` 
       : `1. description for ${step.title}`;
     
-    return {
-      no: (index + 1).toString(),
-      step: step.title,
-      keyPoints: keyPointsText,
-      symbol: { content: symbolCell, styles: { textColor: symbolColor, fontStyle: 'bold', halign: 'center' } },
-      reasons: 'Ensure quality',
-      obligatory: { content: '●', styles: { textColor: '#0000FF', fontStyle: 'bold', halign: 'center' } },
-      pictures: { content: 'See step image in app', styles: { halign: 'center' } }
-    };
+    // Determine which symbol to use based on step index (alternating)
+    const symbolCode = index % 3 === 0 ? '●' : (index % 3 === 1 ? '●' : '✓');
+    const symbolColor = index % 3 === 0 ? '#FF0000' : '#000000';
+    
+    return [
+      (index + 1).toString(),
+      step.title,
+      keyPointsText,
+      { content: symbolCode, styles: { textColor: symbolColor, fontStyle: 'bold', halign: 'center' } },
+      'Ensure quality',
+      { content: '●', styles: { textColor: '#0000FF', fontStyle: 'bold', halign: 'center' } },
+      { content: `${index + 1}.1\n[See step image in app]`, styles: { halign: 'center' } }
+    ];
   });
   
   // Create the main table
   doc.autoTable({
     startY: legendY + 10,
-    head: [columns.map(col => col.header)],
-    body: rows.map(row => {
-      return columns.map(col => {
-        const cell = row[col.dataKey];
-        return cell;
-      });
-    }),
+    head: [columns],
+    body: rows,
     theme: 'grid',
     tableWidth: usableWidth,
     margin: { left: margin, right: margin },
@@ -167,18 +161,6 @@ export const generateSOPPdf = async (metadata: SOPMetadata, steps: Step[]): Prom
       4: { cellWidth: 60 }, // Reasons
       5: { cellWidth: 20 }, // Obligatory
       6: { cellWidth: 40 }  // Pictures
-    },
-    didDrawCell: (data) => {
-      // If this is a pictures cell in the body, draw a placeholder
-      if (data.column.dataKey === 'pictures' && data.row.section === 'body') {
-        const cell = data.cell;
-        const row = data.row.index;
-        
-        // Add reference number
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'bold');
-        doc.text(`${row + 1}.1`, cell.x + cell.width / 2, cell.y + 8, { align: 'center' });
-      }
     }
   });
   
