@@ -336,19 +336,33 @@ export default function EditSOPPage({ params }: { params: { id: string } }) {
     try {
       setIsSaving(true);
       
+      // Save the current state to the database
       await updateDoc(doc(db, 'sops', params.id), {
         metadata,
         steps,
         updatedAt: new Date().toISOString()
       });
       
-      alert('SOP updated and saved before generating PDF');
+      // Fetch the latest version to ensure we have the most up-to-date data
+      const docRef = doc(db, 'sops', params.id);
+      const docSnap = await getDoc(docRef);
       
-      // Now generate the PDF with the latest data
-      createAndDownloadSopPdf(metadata, steps);
+      if (docSnap.exists()) {
+        const latestSop = {
+          id: docSnap.id,
+          ...docSnap.data()
+        } as SOP;
+        
+        // Generate PDF with the latest data
+        createAndDownloadSopPdf(latestSop.metadata, latestSop.steps);
+      } else {
+        // Fallback to current state if we can't fetch the latest
+        createAndDownloadSopPdf(metadata, steps);
+      }
     } catch (error) {
-      console.error('Error updating SOP before PDF generation:', error);
-      alert('Failed to update SOP before generating PDF. Please try saving first.');
+      console.error('Error updating/fetching SOP:', error);
+      alert('Failed to update/fetch latest data. Using current version for PDF.');
+      createAndDownloadSopPdf(metadata, steps);
     } finally {
       setIsSaving(false);
     }

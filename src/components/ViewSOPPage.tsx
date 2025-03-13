@@ -40,22 +40,31 @@ export default function ViewSOPPage({ params }: { params: { id: string } }) {
   }, [params.id, router]);
 
   // Generate and download a PDF of the SOP
-  const exportToPDF = () => {
+  const exportToPDF = async () => {
     if (!sop) return;
     
-    if (!sop.metadata.title) {
-      alert('Please add a SOP title');
-      return;
+    try {
+      // Fetch the latest version from the database
+      const docRef = doc(db, 'sops', params.id);
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        const latestSop = {
+          id: docSnap.id,
+          ...docSnap.data()
+        } as SOP;
+        
+        // Generate PDF with the latest data
+        createAndDownloadSopPdf(latestSop.metadata, latestSop.steps);
+      } else {
+        alert('Could not find the latest version of this SOP');
+      }
+    } catch (error) {
+      console.error('Error fetching latest SOP data:', error);
+      alert('Failed to fetch the latest data. Using current version for PDF.');
+      createAndDownloadSopPdf(sop.metadata, sop.steps);
     }
-    
-    if (sop.steps.length === 0) {
-      alert('Please add at least one step');
-      return;
-    }
-    
-    createAndDownloadSopPdf(sop.metadata, sop.steps);
   };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
