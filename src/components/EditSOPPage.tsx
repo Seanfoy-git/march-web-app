@@ -321,7 +321,6 @@ export default function EditSOPPage({ params }: { params: { id: string } }) {
 
   // Generate and download a PDF of the SOP
  
-import { createAndDownloadSopPdf } from '@/utils/pdfUtils';
 
 
 const exportToPDF = () => {
