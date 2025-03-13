@@ -702,3 +702,4 @@ export default function EditSOPPage({ params }: { params: { id: string } }) {
       </div>
     </main>
   );
+}
