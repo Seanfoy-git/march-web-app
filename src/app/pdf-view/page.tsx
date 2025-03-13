@@ -1,8 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import PDFViewPage from '@/components/PDFViewPage';
 
 export default function Page() {
-  return <PDFViewPage />;
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PDFViewPage />
+    </Suspense>
+  );
 }
