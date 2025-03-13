@@ -1,6 +1,11 @@
-// src/app/sop/edit/[id]/page.tsx
+'use client';
+
+import { useParams } from 'next/navigation';
 import EditSOPPage from '../../../../components/EditSOPPage';
 
-export default function Page({ params }: { params: { id: string } }) {
-  return <EditSOPPage params={params} />;
+export default function Page() {
+  const params = useParams();
+  const id = params.id as string;
+  
+  return <EditSOPPage params={{ id }} />;
 }
