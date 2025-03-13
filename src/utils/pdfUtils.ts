@@ -4,7 +4,7 @@ import 'jspdf-autotable';
 import { SOPMetadata, Step } from '@/types/sop';
 
 /**
- * Creates a professional SOP PDF document
+ * Creates a professional SOP PDF document with improved layout
  * @param metadata SOP metadata information
  * @param steps SOP steps with descriptions and images
  * @returns Promise resolved when PDF is generated and downloaded
@@ -25,210 +25,235 @@ export const generateSOPPdf = async (metadata: SOPMetadata, steps: Step[]): Prom
     format: 'a4'
   });
   
-  // Add header
-  doc.setFillColor(240, 240, 240);
+  // Add header with title
+  doc.setFillColor(255, 255, 255);
   doc.rect(0, 0, 297, 20, 'F'); // Header background
-  doc.setFontSize(16);
+  doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(0, 0, 0);
-  doc.text('Standard Work Instruction', 148.5, 10, { align: 'center' });
-  
-  // Add company logo or name
-  doc.setFontSize(18);
-  doc.setTextColor(41, 128, 185);
-  doc.setFont('helvetica', 'bold');
-  doc.text('eTWI', 15, 10);
+  doc.text('Work Instruction', 148.5, 12, { align: 'center' });
   
   // Add metadata table
   doc.setLineWidth(0.1);
   doc.setDrawColor(0);
   doc.setFillColor(255, 255, 255);
   
-  // Top row of metadata
-  const metadataTop = 25;
-  doc.rect(10, metadataTop, 45, 10, 'S'); // Template No.
-  doc.rect(55, metadataTop, 45, 10, 'S'); // Department
-  doc.rect(100, metadataTop, 60, 10, 'S'); // Area
-  doc.rect(160, metadataTop, 50, 10, 'S'); // Operation
-  doc.rect(210, metadataTop, 40, 10, 'S'); // Instruction no.
-  doc.rect(250, metadataTop, 15, 10, 'S'); // Version
-  doc.rect(265, metadataTop, 22, 10, 'S'); // Page Number
+  // Top metadata section
+  const headerTop = 20;
   
-  // Headers for metadata
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Template No.:', 11, metadataTop + 5);
-  doc.text('Department', 56, metadataTop + 5);
-  doc.text('Area', 101, metadataTop + 5);
-  doc.text('Operation', 161, metadataTop + 5);
-  doc.text('Instruction no.:', 211, metadataTop + 5);
-  doc.text('Version', 251, metadataTop + 5);
-  doc.text('Page Number', 266, metadataTop + 5);
-  
-  // Values for metadata
-  const metadataValues = metadataTop + 15;
-  doc.rect(10, metadataValues, 45, 10, 'S');
-  doc.rect(55, metadataValues, 45, 10, 'S');
-  doc.rect(100, metadataValues, 60, 10, 'S');
-  doc.rect(160, metadataValues, 50, 10, 'S');
-  doc.rect(210, metadataValues, 40, 10, 'S');
-  doc.rect(250, metadataValues, 15, 10, 'S');
-  doc.rect(265, metadataValues, 22, 10, 'S');
-  
-  doc.setFontSize(10);
-  // Fill in metadata values
-  doc.text(`SOP_${metadata.title.substring(0, 10)}`, 11, metadataValues + 5);
-  doc.text(metadata.department || 'Department', 56, metadataValues + 5);
-  doc.text('Production', 101, metadataValues + 5);
-  doc.text(metadata.title.substring(0, 20), 161, metadataValues + 5);
-  doc.text(`SOP_${Date.now().toString().substring(8, 13)}`, 211, metadataValues + 5);
-  doc.text(metadata.version || '1.0', 251, metadataValues + 5);
-  doc.text('1/1', 266, metadataValues + 5);
-  
-  // Create table for steps
-  const tableTop = metadataValues + 15;
-  
-  // Table headers
-  doc.setFillColor(240, 240, 240);
-  doc.rect(10, tableTop, 55, 10, 'FD'); // Pictures
-  doc.rect(65, tableTop, 15, 10, 'FD'); // No.
-  doc.rect(80, tableTop, 80, 10, 'FD'); // Important steps
-  doc.rect(160, tableTop, 15, 10, 'FD'); // No.
-  doc.rect(175, tableTop, 50, 10, 'FD'); // Key points
-  doc.rect(225, tableTop, 20, 10, 'FD'); // Symbol
-  doc.rect(245, tableTop, 42, 10, 'FD'); // Reason
+  // Main header sections
+  doc.rect(10, headerTop, 150, 10, 'S'); // Operation
+  doc.rect(160, headerTop, 65, 10, 'S'); // Formular nr
+  doc.rect(225, headerTop, 62, 10, 'S'); // Formular value
   
   doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
-  doc.text('Pictures', 35, tableTop + 6, { align: 'center' });
-  doc.text('No.', 72, tableTop + 6, { align: 'center' });
-  doc.text('Important steps', 120, tableTop + 6, { align: 'center' });
-  doc.text('No.', 167, tableTop + 6, { align: 'center' });
-  doc.text('Key points', 200, tableTop + 6, { align: 'center' });
-  doc.text('Symbol', 235, tableTop + 6, { align: 'center' });
-  doc.text('Reason', 266, tableTop + 6, { align: 'center' });
+  doc.text(`Operation: ${metadata.title}`, 12, headerTop + 7);
+  doc.text('Formular nr', 162, headerTop + 7);
+  doc.text(`${Date.now().toString().substring(0, 11)}`, 227, headerTop + 7);
   
-  // Second row of headers
-  const subHeaderTop = tableTop + 10;
-  doc.rect(10, subHeaderTop, 55, 10, 'S');
-  doc.rect(65, subHeaderTop, 15, 10, 'S');
-  doc.rect(80, subHeaderTop, 80, 10, 'S');
-  doc.rect(160, subHeaderTop, 15, 10, 'S');
-  doc.rect(175, subHeaderTop, 50, 10, 'S');
-  doc.rect(225, subHeaderTop, 20, 10, 'S');
-  doc.rect(245, subHeaderTop, 42, 10, 'S');
+  // Second row
+  const row2 = headerTop + 10;
+  doc.rect(10, row2, 150, 10, 'S'); // Blank
+  doc.rect(160, row2, 65, 10, 'S'); // Prepared by
+  doc.rect(225, row2, 62, 10, 'S'); // Prepared value
   
-  doc.setFont('helvetica', 'normal');
-  doc.text('What?', 35, subHeaderTop + 6, { align: 'center' });
-  doc.text('How?', 200, subHeaderTop + 6, { align: 'center' });
-  doc.text('Why?', 266, subHeaderTop + 6, { align: 'center' });
+  doc.text('Prepared by', 162, row2 + 7);
+  doc.text(metadata.author || '', 227, row2 + 7);
+  
+  // Third row
+  const row3 = row2 + 10;
+  doc.rect(10, row3, 150, 10, 'S'); // Blank
+  doc.rect(160, row3, 65, 10, 'S'); // Checked
+  doc.rect(225, row3, 62, 10, 'S'); // Checked value
+  
+  doc.text('Checked', 162, row3 + 7);
+  doc.text(metadata.approver || '', 227, row3 + 7);
+  
+  // Fourth row
+  const row4 = row3 + 10;
+  doc.rect(10, row4, 150, 10, 'S'); // Blank 
+  doc.rect(160, row4, 65, 10, 'S'); // Version
+  doc.rect(225, row4, 62, 10, 'S'); // Version value
+  
+  doc.text('Version', 162, row4 + 7);
+  doc.text(metadata.version || '1.0', 227, row4 + 7);
+  
+  // Create legend for symbols
+  const legendTop = row4 + 15;
+  doc.setFontSize(8);
+  doc.text('Legend:', 225, legendTop);
+  
+  // Draw symbols and their meanings
+  const symbolX = 230;
+  const symbolY = legendTop + 10;
+  const symbolSpacing = 15;
+  
+  // Quality symbol (red circle)
+  doc.setFillColor(255, 0, 0);
+  doc.circle(symbolX, symbolY, 3, 'F');
+  doc.setFontSize(8);
+  doc.setTextColor(0, 0, 0);
+  doc.text('Quality', symbolX + 5, symbolY + 2);
+  
+  // Correctness symbol (black circle)
+  doc.setFillColor(0, 0, 0);
+  doc.circle(symbolX, symbolY + symbolSpacing, 3, 'F');
+  doc.text('Correctness', symbolX + 5, symbolY + symbolSpacing + 2);
+  
+  // Tip symbol (checkmark)
+  doc.setFillColor(0, 0, 0);
+  doc.text('✓', symbolX - 1, symbolY + symbolSpacing * 2 + 2);
+  doc.text('Tip', symbolX + 5, symbolY + symbolSpacing * 2 + 2);
+  
+  // Create table for steps
+  const tableTop = row4 + 30;
+  
+  // Table headers
+  doc.setFillColor(240, 240, 240);
+  
+  // Main table headers
+  doc.rect(10, tableTop, 25, 10, 'FD'); // No.
+  doc.rect(35, tableTop, 75, 10, 'FD'); // Major steps (What)
+  doc.rect(110, tableTop, 25, 10, 'FD'); // Time (s)
+  doc.rect(135, tableTop, 75, 10, 'FD'); // Key points (How)
+  doc.rect(210, tableTop, 15, 10, 'FD'); // Symbols
+  doc.rect(225, tableTop, 62, 10, 'FD'); // Pictures
+  
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(0, 0, 0);
+  doc.text('No.', 12, tableTop + 6);
+  doc.text('Major steps (What)', 37, tableTop + 6);
+  doc.text('Time (s)', 112, tableTop + 6);
+  doc.text('Key points (How)', 137, tableTop + 6);
+  doc.text('Symbols', 212, tableTop + 6);
+  doc.text('Pictures', 250, tableTop + 6, { align: 'center' });
   
   // Process each step
-  let yPosition = subHeaderTop + 10;
+  let yPosition = tableTop + 10;
   const rowHeight = 30; // Each step row height
   
   for (let i = 0; i < steps.length; i++) {
     const step = steps[i];
+    const rowCount = Math.ceil((step.description?.length || 0) / 100) + 1; // Estimate rows needed
+    const calculatedRowHeight = Math.max(rowHeight, rowCount * 10);
     
     // Check if we need a new page
-    if (yPosition + rowHeight > 200) {
+    if (yPosition + calculatedRowHeight > 190) {
       doc.addPage('a4', 'landscape');
-      doc.setFillColor(240, 240, 240);
-      doc.rect(0, 0, 297, 20, 'F'); // Header background
       doc.setFontSize(16);
       doc.setFont('helvetica', 'bold');
-      doc.text('Standard Work Instruction (Continued)', 148.5, 10, { align: 'center' });
+      doc.text('Work Instruction (Continued)', 148.5, 10, { align: 'center' });
       yPosition = 25;
       
       // Add table headers on new page
       doc.setFillColor(240, 240, 240);
-      doc.rect(10, yPosition, 55, 10, 'FD');
-      doc.rect(65, yPosition, 15, 10, 'FD');
-      doc.rect(80, yPosition, 80, 10, 'FD');
-      doc.rect(160, yPosition, 15, 10, 'FD');
-      doc.rect(175, yPosition, 50, 10, 'FD');
-      doc.rect(225, yPosition, 20, 10, 'FD');
-      doc.rect(245, yPosition, 42, 10, 'FD');
+      
+      // Main table headers
+      doc.rect(10, yPosition, 25, 10, 'FD'); // No.
+      doc.rect(35, yPosition, 75, 10, 'FD'); // Major steps (What)
+      doc.rect(110, yPosition, 25, 10, 'FD'); // Time (s)
+      doc.rect(135, yPosition, 75, 10, 'FD'); // Key points (How)
+      doc.rect(210, yPosition, 15, 10, 'FD'); // Symbols
+      doc.rect(225, yPosition, 62, 10, 'FD'); // Pictures
       
       doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
-      doc.text('Pictures', 35, yPosition + 6, { align: 'center' });
-      doc.text('No.', 72, yPosition + 6, { align: 'center' });
-      doc.text('Important steps', 120, yPosition + 6, { align: 'center' });
-      doc.text('No.', 167, yPosition + 6, { align: 'center' });
-      doc.text('Key points', 200, yPosition + 6, { align: 'center' });
-      doc.text('Symbol', 235, yPosition + 6, { align: 'center' });
-      doc.text('Reason', 266, yPosition + 6, { align: 'center' });
+      doc.text('No.', 12, yPosition + 6);
+      doc.text('Major steps (What)', 37, yPosition + 6);
+      doc.text('Time (s)', 112, yPosition + 6);
+      doc.text('Key points (How)', 137, yPosition + 6);
+      doc.text('Symbols', 212, yPosition + 6);
+      doc.text('Pictures', 250, yPosition + 6, { align: 'center' });
       
       yPosition += 10;
     }
     
     // Draw table cells for this step
-    doc.rect(10, yPosition, 55, rowHeight, 'S'); // Pictures
-    doc.rect(65, yPosition, 15, rowHeight, 'S'); // No.
-    doc.rect(80, yPosition, 80, rowHeight, 'S'); // Important steps
-    doc.rect(160, yPosition, 15, rowHeight, 'S'); // No.
-    doc.rect(175, yPosition, 50, rowHeight, 'S'); // Key points
-    doc.rect(225, yPosition, 20, rowHeight, 'S'); // Symbol
-    doc.rect(245, yPosition, 42, rowHeight, 'S'); // Reason
+    doc.rect(10, yPosition, 25, calculatedRowHeight, 'S'); // No.
+    doc.rect(35, yPosition, 75, calculatedRowHeight, 'S'); // Major steps
+    doc.rect(110, yPosition, 25, calculatedRowHeight, 'S'); // Time
+    doc.rect(135, yPosition, 75, calculatedRowHeight, 'S'); // Key points
+    doc.rect(210, yPosition, 15, calculatedRowHeight, 'S'); // Symbol
+    doc.rect(225, yPosition, 62, calculatedRowHeight, 'S'); // Pictures
     
     // Fill in step data
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     
     // Step number
-    doc.text(`${i + 1}`, 72, yPosition + 15, { align: 'center' });
+    doc.text(`${i + 1}`, 22, yPosition + 15, { align: 'center' });
     
     // Step title
     doc.setFont('helvetica', 'bold');
-    doc.text(step.title, 83, yPosition + 10);
+    doc.text(step.title, 37, yPosition + 10);
     doc.setFont('helvetica', 'normal');
     
-    // Step description (if any)
+    // Add a placeholder time value
+    doc.text(`${Math.floor(Math.random() * 5) + 1}`, 122, yPosition + 15, { align: 'center' });
+    
+    // Step description (as key points)
     if (step.description) {
-      const splitDescription = doc.splitTextToSize(step.description, 75);
-      doc.text(splitDescription, 83, yPosition + 15);
-    }
-    
-    // Indicator for picture
-    doc.setFontSize(8);
-    if (step.imageUrl) {
-      doc.text('[See step image in app]', 35, yPosition + 15, { align: 'center' });
+      const keyPoints = step.description.split('\n').filter(line => line.trim().length > 0);
+      let keyPointY = yPosition + 10;
       
-      // Add a placeholder box for the image
-      doc.rect(15, yPosition + 5, 45, 20, 'S');
-      doc.line(15, yPosition + 5, 60, yPosition + 25);
-      doc.line(60, yPosition + 5, 15, yPosition + 25);
+      keyPoints.forEach((point, idx) => {
+        const pointNumber = idx + 1;
+        const splitPoint = doc.splitTextToSize(`${pointNumber}. ${point}`, 70);
+        doc.text(splitPoint, 137, keyPointY);
+        keyPointY += splitPoint.length * 8;
+      });
+    } else {
+      doc.text('1. Follow the procedure carefully', 137, yPosition + 10);
     }
     
-    // Key points (assumed from step description)
-    doc.setFontSize(9);
-    doc.text('See step description', 177, yPosition + 10);
+    // Add a symbol depending on the step number
+    const symbols = ['○', '●', '✓'];
+    const symbolIndex = i % symbols.length;
     
-    // Reason (derived from purpose or just a placeholder)
-    doc.text('For correct process execution', 247, yPosition + 10);
+    if (symbolIndex === 0) {
+      // Quality symbol (red circle)
+      doc.setFillColor(255, 0, 0);
+      doc.circle(217, yPosition + 15, 3, 'F');
+    } else if (symbolIndex === 1) {
+      // Correctness symbol (black circle)
+      doc.setFillColor(0, 0, 0);
+      doc.circle(217, yPosition + 15, 3, 'F');
+    } else {
+      // Tip symbol (checkmark)
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(14);
+      doc.text('✓', 217, yPosition + 15, { align: 'center' });
+      doc.setFontSize(10);
+    }
+    doc.setTextColor(0, 0, 0);
     
-    yPosition += rowHeight;
+    // Add reference to image
+    if (step.imageUrl) {
+      const stepId = `${i+1}.${Math.floor(Math.random() * 3) + 1}`;
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text(stepId, 250, yPosition + 15, { align: 'center' });
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.text('[See step image in app]', 250, yPosition + 25, { align: 'center' });
+    }
+    
+    yPosition += calculatedRowHeight;
   }
   
-  // Add footer with approvals
-  const footerTop = Math.min(yPosition + 10, 190);
-  
-  doc.rect(10, footerTop, 40, 10, 'S');
-  doc.rect(50, footerTop, 40, 10, 'S');
-  doc.rect(90, footerTop, 80, 10, 'S');
-  
-  doc.setFontSize(8);
-  doc.text('Approval Date', 11, footerTop + 5);
-  doc.text(metadata.approvalDate || new Date().toLocaleDateString(), 51, footerTop + 5);
-  doc.text(`Prepared by: ${metadata.author || 'Author'}`, 91, footerTop + 5);
-  
-  // Add second row of footer
-  doc.rect(10, footerTop + 10, 40, 10, 'S');
-  doc.rect(50, footerTop + 10, 237, 10, 'S');
-  
-  doc.text('Tools', 11, footerTop + 15);
-  doc.text('Required equipment: Standard safety equipment', 51, footerTop + 15);
+  // Add footer with approval date only if provided
+  if (metadata.approvalDate) {
+    const footerTop = Math.min(yPosition + 10, 190);
+    
+    doc.rect(10, footerTop, 60, 10, 'S');
+    doc.rect(70, footerTop, 60, 10, 'S');
+    
+    doc.setFontSize(8);
+    doc.text('Approval Date', 11, footerTop + 5);
+    doc.text(metadata.approvalDate, 71, footerTop + 5);
+  }
   
   // Save the PDF
   doc.save(`${metadata.title.replace(/\s+/g, '_')}_SOP.pdf`);
@@ -240,7 +265,11 @@ export const generateSOPPdf = async (metadata: SOPMetadata, steps: Step[]): Prom
 export const createAndDownloadSopPdf = async (metadata: SOPMetadata, steps: Step[]): Promise<void> => {
   try {
     console.log("PDF Generation - Metadata:", JSON.stringify(metadata));
-    console.log("PDF Generation - Steps:", JSON.stringify(steps));
+    console.log("PDF Generation - Steps:", JSON.stringify(steps.map(s => ({
+      title: s.title,
+      hasDescription: !!s.description,
+      hasImage: !!s.imageUrl
+    }))));
     
     // Show loading indicator
     alert("Starting PDF generation. This may take a moment...");
