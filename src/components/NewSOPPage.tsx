@@ -263,11 +263,11 @@ export default function NewSOPPage() {
     setIsSaving(true);
     
     try {
-      const docRef = await addDoc(collection(db, 'sops'), {
-        metadata,
-        steps,
-        createdAt: new Date().toISOString()
-      });
+        await addDoc(collection(db, 'sops'), {
+            metadata,
+            steps,
+            createdAt: new Date().toISOString()
+          });
       
       alert('SOP saved successfully!');
       router.push('/');
