@@ -17,6 +17,8 @@ export default function PDFViewPage() {
 
   useEffect(() => {
     try {
+      if (!searchParams) return;
+      
       const metadataParam = searchParams.get('metadata');
       const stepsParam = searchParams.get('steps');
       

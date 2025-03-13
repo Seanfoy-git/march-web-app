@@ -1,8 +1,13 @@
 // src/app/pdf-view/page.tsx
 'use client';
 
+import React, { Suspense } from 'react';
 import PDFViewPage from '@/components/PDFViewPage';
 
 export default function Page() {
-  return <PDFViewPage />;
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading PDF view...</div>}>
+      <PDFViewPage />
+    </Suspense>
+  );
 }
