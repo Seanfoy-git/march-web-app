@@ -321,19 +321,38 @@ export default function EditSOPPage({ params }: { params: { id: string } }) {
  
 
 
-const exportToPDF = () => {
-  if (!metadata.title) {
-    alert('Please add a SOP title');
-    return;
-  }
-  
-  if (steps.length === 0) {
-    alert('Please add at least one step');
-    return;
-  }
-  
-  createAndDownloadSopPdf(metadata, steps);
-};
+  const exportToPDF = async () => {
+    if (!metadata.title) {
+      alert('Please add a SOP title');
+      return;
+    }
+    
+    if (steps.length === 0) {
+      alert('Please add at least one step');
+      return;
+    }
+    
+    // First save any pending changes
+    try {
+      setIsSaving(true);
+      
+      await updateDoc(doc(db, 'sops', params.id), {
+        metadata,
+        steps,
+        updatedAt: new Date().toISOString()
+      });
+      
+      alert('SOP updated and saved before generating PDF');
+      
+      // Now generate the PDF with the latest data
+      createAndDownloadSopPdf(metadata, steps);
+    } catch (error) {
+      console.error('Error updating SOP before PDF generation:', error);
+      alert('Failed to update SOP before generating PDF. Please try saving first.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   // Initialize and cleanup camera
   useEffect(() => {
