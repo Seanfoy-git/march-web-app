@@ -7,6 +7,7 @@ import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import { db } from '@/lib/firebase';
 import type { SOP } from '@/types/sop';
+import { createAndDownloadSopPdf } from '@/utils/pdfUtils';
 
 export default function ViewSOPPage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -40,25 +41,22 @@ export default function ViewSOPPage({ params }: { params: { id: string } }) {
     fetchSOP();
   }, [params.id, router]);
 
- // In src/components/NewSOPPage.tsx, src/components/EditSOPPage.tsx, and src/components/ViewSOPPage.tsx
-
-// First, add the import:
-import { createAndDownloadSopPdf } from '@/utils/pdfUtils';
-
-// Then, replace the existing exportToPDF function with this simpler version:
-const exportToPDF = () => {
-  if (!metadata.title) {
-    alert('Please add a SOP title');
-    return;
-  }
-  
-  if (steps.length === 0) {
-    alert('Please add at least one step');
-    return;
-  }
-  
-  createAndDownloadSopPdf(metadata, steps);
-};
+  // Generate and download a PDF of the SOP
+  const exportToPDF = () => {
+    if (!sop) return;
+    
+    if (!sop.metadata.title) {
+      alert('Please add a SOP title');
+      return;
+    }
+    
+    if (sop.steps.length === 0) {
+      alert('Please add at least one step');
+      return;
+    }
+    
+    createAndDownloadSopPdf(sop.metadata, sop.steps);
+  };
 
   if (loading) {
     return (
