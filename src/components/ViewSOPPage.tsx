@@ -7,7 +7,7 @@ import { getDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { SOP } from '@/types/sop';
 import { createAndDownloadSopPdf } from '@/utils/pdfUtils';
-import Image from 'next/image';
+// Removed the unused Image import
 
 export default function ViewSOPPage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -207,15 +207,16 @@ export default function ViewSOPPage({ params }: { params: { id: string } }) {
                     <div>
                       <h4 className="text-sm font-medium text-gray-500 mb-2">Reference Image</h4>
                       <div className="relative border border-gray-200 rounded-md p-1 min-h-[200px] flex items-center justify-center">
-                        {/* Use our image proxy API to avoid CORS issues */}
+                        {/* Use regular img tag with proxy API to avoid CORS issues */}
                         <img 
                           src={`/api/image-proxy?url=${encodeURIComponent(step.imageUrl)}`}
                           alt={`Step ${index + 1}`}
                           className="max-w-full max-h-64 object-contain"
                           onError={(e) => {
                             console.error(`Error loading image for step ${index + 1}`);
-                            e.currentTarget.src = '/placeholder-image.png'; // Replace with your placeholder image
-                            e.currentTarget.alt = 'Image not available';
+                            // Using type assertion to access src property
+                            (e.currentTarget as HTMLImageElement).src = '/placeholder-image.svg';
+                            (e.currentTarget as HTMLImageElement).alt = 'Image not available';
                           }}
                         />
                       </div>
