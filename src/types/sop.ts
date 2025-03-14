@@ -7,6 +7,7 @@ export interface SOPMetadata {
     createdDate: string;
     approvalDate: string;
     version: string;
+    [key: string]: string;
   }
   
   export type SymbolType = 'quality' | 'correctness' | 'tip' | 'hazard';
