@@ -1,11 +1,16 @@
 // src/utils/pdfUtils.ts
 import { jsPDF } from "jspdf";
-// Make sure to install jspdf-autotable with npm install jspdf-autotable
-import "jspdf-autotable";
+import "jspdf-autotable"; // This adds autoTable to jsPDF prototype but TypeScript doesn't know
 import type { SOPMetadata, Step } from "@/types/sop";
 
-interface AutoTableOutput {
-  finalY: number;
+// Declare the module to extend jsPDF types
+declare module "jspdf" {
+  interface jsPDF {
+    autoTable: (options: any) => any;
+    lastAutoTable: {
+      finalY: number;
+    };
+  }
 }
 
 /**
@@ -91,10 +96,7 @@ export const createAndDownloadSopPdf = async (
     });
 
     // Process images and add steps
-    // Access the lastAutoTable property with proper typing
-    // The library adds this property but TypeScript doesn't know about it
-    const docWithExtensions = doc as jsPDF & { lastAutoTable: AutoTableOutput };
-    let currentY = docWithExtensions.lastAutoTable.finalY + 15;
+    let currentY = doc.lastAutoTable.finalY + 15;
 
     for (let i = 0; i < validSteps.length; i++) {
       const step = validSteps[i];
