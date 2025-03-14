@@ -74,17 +74,48 @@ export const createAndDownloadSopPdf = async (metadata, steps) => {
     ];
 
     // Add table with metadata
-    doc.autoTable({
-      startY: 30,
-      head: [["Field", "Value"]],
-      body: metadataRows,
-      theme: 'grid',
-      headStyles: { fillColor: [59, 130, 246], textColor: [255, 255, 255] },
-      styles: { halign: 'left', fontSize: 10 }
-    });
-
-    // Process images and add steps
-    let currentY = doc.lastAutoTable.finalY + 15;
+    let currentY = 0;
+    try {
+      if (typeof doc.autoTable === 'function') {
+        doc.autoTable({
+          startY: 30,
+          head: [["Field", "Value"]],
+          body: metadataRows,
+          theme: 'grid',
+          headStyles: { fillColor: [59, 130, 246], textColor: [255, 255, 255] },
+          styles: { halign: 'left', fontSize: 10 }
+        });
+        
+        // Get position after the table
+        currentY = doc.lastAutoTable.finalY + 15;
+      } else {
+        console.log("autoTable function not available, creating simple table");
+        // Create a simple table manually
+        let startY = 30;
+        doc.setFillColor(59, 130, 246);
+        doc.setTextColor(255, 255, 255);
+        doc.rect(20, startY, 80, 10, 'F');
+        doc.rect(100, startY, 80, 10, 'F');
+        doc.text("Field", 25, startY + 7);
+        doc.text("Value", 105, startY + 7);
+        
+        startY += 10;
+        doc.setTextColor(0, 0, 0);
+        
+        metadataRows.forEach((row, index) => {
+          doc.rect(20, startY, 80, 10);
+          doc.rect(100, startY, 80, 10);
+          doc.text(row[0], 25, startY + 7);
+          doc.text(row[1], 105, startY + 7);
+          startY += 10;
+        });
+        
+        currentY = startY + 15;
+      }
+    } catch (error) {
+      console.error("Error creating table:", error);
+      currentY = 80; // Start content after a reasonable space
+    }
 
     for (let i = 0; i < validSteps.length; i++) {
       const step = validSteps[i];
