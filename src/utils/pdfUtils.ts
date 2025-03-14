@@ -1,14 +1,15 @@
-// src/utils/pdfUtils.js
+// src/utils/pdfUtils.ts
 import { jsPDF } from "jspdf";
 // Make sure to install jspdf-autotable with npm install jspdf-autotable
 import "jspdf-autotable";
+import type { SOPMetadata, Step } from "@/types/sop";
 
 /**
  * Get image through the proxy API to avoid CORS issues
  * @param {string} imageUrl - Original Firebase Storage URL
  * @returns {Promise<string>} - Base64 encoded image data
  */
-const getProxiedImage = async (imageUrl) => {
+const getProxiedImage = async (imageUrl: string): Promise<string> => {
   try {
     // Use our API route to proxy the image request
     const proxyUrl = `/api/image-proxy?url=${encodeURIComponent(imageUrl)}`;
@@ -20,9 +21,9 @@ const getProxiedImage = async (imageUrl) => {
     
     // Convert to blob and then to base64
     const blob = await response.blob();
-    return new Promise((resolve, reject) => {
+    return new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
+      reader.onload = () => resolve(reader.result as string);
       reader.onerror = reject;
       reader.readAsDataURL(blob);
     });
@@ -34,10 +35,14 @@ const getProxiedImage = async (imageUrl) => {
 
 /**
  * Creates and downloads a PDF of the SOP
- * @param {Object} metadata - SOP metadata
- * @param {Array} steps - SOP steps
+ * @param {SOPMetadata} metadata - SOP metadata
+ * @param {Step[]} steps - SOP steps
+ * @returns {Promise<boolean>} - Success indicator
  */
-export const createAndDownloadSopPdf = async (metadata, steps) => {
+export const createAndDownloadSopPdf = async (
+  metadata: SOPMetadata, 
+  steps: Step[]
+): Promise<boolean> => {
   try {
     console.log("Starting PDF generation");
     console.log("Metadata:", JSON.stringify(metadata));
@@ -82,7 +87,7 @@ export const createAndDownloadSopPdf = async (metadata, steps) => {
     });
 
     // Process images and add steps
-    let currentY = doc.lastAutoTable.finalY + 15;
+    let currentY = (doc as any).lastAutoTable.finalY + 15;
 
     for (let i = 0; i < validSteps.length; i++) {
       const step = validSteps[i];
@@ -190,8 +195,8 @@ export const createAndDownloadSopPdf = async (metadata, steps) => {
   } catch (error) {
     console.error("Error generating PDF:", error);
     console.error("Error details:", JSON.stringify({
-      message: error.message,
-      stack: error.stack
+      message: (error as Error).message,
+      stack: (error as Error).stack
     }));
     alert("There was an error generating the PDF. Please check the console for details.");
     return false;
