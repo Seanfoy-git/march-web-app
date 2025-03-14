@@ -19,7 +19,7 @@ const createSimpleTable = (doc, head, body, startY) => {
   // Add headers
   doc.setFillColor(59, 130, 246);
   doc.setTextColor(255, 255, 255);
-  doc.setFontStyle('bold');
+  doc.setFont("helvetica", "bold"); // Modern jsPDF API
   head[0].forEach((header, index) => {
     doc.setFillColor(59, 130, 246);
     doc.rect(margin + index * cellWidth, yPosition, cellWidth, cellHeight, 'F');
@@ -30,7 +30,7 @@ const createSimpleTable = (doc, head, body, startY) => {
   
   // Add rows
   doc.setTextColor(0, 0, 0);
-  doc.setFontStyle('normal');
+  doc.setFont("helvetica", "normal"); // Modern jsPDF API
   body.forEach((row, rowIndex) => {
     row.forEach((cell, cellIndex) => {
       doc.setFillColor(rowIndex % 2 === 0 ? 245 : 255, rowIndex % 2 === 0 ? 245 : 255, rowIndex % 2 === 0 ? 245 : 255);
@@ -84,28 +84,35 @@ export const createAndDownloadSopPdf = async (metadata, steps) => {
       ["Version", metadata.version || "1.0"]
     ];
 
-    // Check if autoTable is available
-    if (typeof doc.autoTable === 'function') {
-      doc.autoTable({
-        startY: 30,
-        head: [["Field", "Value"]],
-        body: metadataRows,
-        theme: 'grid',
-        headStyles: { fillColor: [59, 130, 246], textColor: [255, 255, 255] },
-        styles: { halign: 'left', fontSize: 10 }
-      });
-      
-      // Process images and add steps
-      let currentY = doc.lastAutoTable.finalY + 15;
-      processSteps(doc, validSteps, currentY);
-    } else {
-      // Fallback to simple table
-      console.log("AutoTable function not available, using fallback");
-      let finalY = createSimpleTable(doc, [["Field", "Value"]], metadataRows, 30);
-      
-      // Process images and add steps
-      processSteps(doc, validSteps, finalY + 15);
+    let currentY = 0;
+
+    try {
+      // Check if autoTable is available
+      if (typeof doc.autoTable === 'function') {
+        doc.autoTable({
+          startY: 30,
+          head: [["Field", "Value"]],
+          body: metadataRows,
+          theme: 'grid',
+          headStyles: { fillColor: [59, 130, 246], textColor: [255, 255, 255] },
+          styles: { halign: 'left', fontSize: 10 }
+        });
+        
+        // Process images and add steps
+        currentY = doc.lastAutoTable.finalY + 15;
+      } else {
+        // Fallback to simple table
+        console.log("AutoTable function not available, using fallback");
+        currentY = createSimpleTable(doc, [["Field", "Value"]], metadataRows, 30) + 15;
+      }
+    } catch (tableError) {
+      console.error("Error creating table:", tableError);
+      // If table creation fails, start content after some space
+      currentY = 50;
     }
+    
+    // Process steps
+    processSteps(doc, validSteps, currentY);
     
     // Save PDF
     const filename = `${metadata.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_sop.pdf`;
