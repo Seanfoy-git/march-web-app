@@ -3,36 +3,7 @@ import { jsPDF } from "jspdf";
 import 'jspdf-autotable';
 
 /**
- * Get image through the proxy API to avoid CORS issues
- * @param {string} imageUrl - Original Firebase Storage URL
- * @returns {Promise<string>} - Base64 encoded image data
- */
-const getProxiedImage = async (imageUrl) => {
-  try {
-    // Use our API route to proxy the image request
-    const proxyUrl = `/api/image-proxy?url=${encodeURIComponent(imageUrl)}`;
-    const response = await fetch(proxyUrl);
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch image through proxy: ${response.status}`);
-    }
-    
-    // Convert to blob and then to base64
-    const blob = await response.blob();
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  } catch (error) {
-    console.error("Error fetching image through proxy:", error);
-    throw error;
-  }
-};
-
-/**
- * Manually creates a table for PDF without using autoTable
+ * Creates a simple table for PDF without using autoTable
  * @param {jsPDF} doc - PDF document
  * @param {Array} head - Table header
  * @param {Array} body - Table body
@@ -215,7 +186,7 @@ function processSteps(doc, validSteps, startY) {
     // Add image if available
     if (step.imageUrl && step.imageUrl.trim()) {
       try {
-        console.log(`Attempting to load image for step ${i + 1}`);
+        console.log(`Image found for step ${i + 1}, adding placeholder`);
         
         // Check if we need to add a new page for the image
         if (currentY > 180) {
@@ -223,39 +194,15 @@ function processSteps(doc, validSteps, startY) {
           currentY = 20;
         }
         
-        // For the current version, we'll skip image loading as it's causing issues
-        // Instead, add a placeholder
+        // For now, just add a placeholder instead of trying to load the image
         doc.setFillColor(240, 240, 240);
         doc.rect(20, currentY, 160, 40, 'F');
         doc.setFontSize(10);
         doc.setTextColor(100, 100, 100);
         doc.text('Image not available in PDF (see online version)', 100, currentY + 20, { align: 'center' });
         currentY += 50;
-        
-        /* Commented out for now to ensure PDF generation works
-        // Get image through our proxy to avoid CORS issues
-        const imgData = await getProxiedImage(step.imageUrl);
-        
-        // Add image to PDF (limiting dimensions)
-        const maxWidth = 160; // mm
-        const maxHeight = 80; // mm
-        
-        doc.addImage(
-          imgData, 
-          'JPEG', 
-          20, 
-          currentY,
-          maxWidth, 
-          maxHeight, 
-          undefined, 
-          'FAST'
-        );
-        
-        currentY += maxHeight + 15;
-        */
-        
       } catch (error) {
-        console.error(`Error loading image for step ${i + 1}:`, error);
+        console.error(`Error processing image for step ${i + 1}:`, error);
         
         // Add placeholder for failed image
         doc.setFillColor(240, 240, 240);
