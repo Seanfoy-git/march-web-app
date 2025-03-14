@@ -4,6 +4,10 @@ import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 import type { SOPMetadata, Step } from "@/types/sop";
 
+interface AutoTableOutput {
+  finalY: number;
+}
+
 /**
  * Get image through the proxy API to avoid CORS issues
  * @param {string} imageUrl - Original Firebase Storage URL
@@ -87,7 +91,10 @@ export const createAndDownloadSopPdf = async (
     });
 
     // Process images and add steps
-    let currentY = (doc as any).lastAutoTable.finalY + 15;
+    // Access the lastAutoTable property with proper typing
+    // The library adds this property but TypeScript doesn't know about it
+    const docWithExtensions = doc as jsPDF & { lastAutoTable: AutoTableOutput };
+    let currentY = docWithExtensions.lastAutoTable.finalY + 15;
 
     for (let i = 0; i < validSteps.length; i++) {
       const step = validSteps[i];
