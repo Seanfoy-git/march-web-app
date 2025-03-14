@@ -50,13 +50,8 @@ export default function ViewSOPPage({ params }: { params: { id: string } }) {
       setExportingPdf(true);
       
       // Generate PDF from current SOP data
-      // Use type casting to avoid TypeScript errors
-      const generatePdf = createAndDownloadSopPdf as (
-        metadata: typeof sop.metadata, 
-        steps: typeof sop.steps
-      ) => Promise<boolean>;
-      
-      await generatePdf(sop.metadata, sop.steps);
+      // Cast the function to avoid TypeScript errors
+      await createAndDownloadSopPdf(sop.metadata, sop.steps);
       console.log("PDF generated successfully");
     } catch (error) {
       console.error("Error generating PDF:", error);
