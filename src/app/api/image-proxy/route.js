@@ -1,7 +1,7 @@
-// src/app/api/image-proxy/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+// src/app/api/image-proxy/route.js
+import { NextResponse } from 'next/server';
 
-export async function GET(request: NextRequest) {
+export async function GET(request) {
   try {
     // Get the image URL from the query parameter
     const searchParams = request.nextUrl.searchParams;

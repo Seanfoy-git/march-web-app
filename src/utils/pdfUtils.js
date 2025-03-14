@@ -1,24 +1,13 @@
-// src/utils/pdfUtils.ts
+// src/utils/pdfUtils.js
 import { jsPDF } from "jspdf";
-import "jspdf-autotable"; // This adds autoTable to jsPDF prototype but TypeScript doesn't know
-import type { SOPMetadata, Step } from "@/types/sop";
-
-// Declare the module to extend jsPDF types
-declare module "jspdf" {
-  interface jsPDF {
-    autoTable: (options: any) => any;
-    lastAutoTable: {
-      finalY: number;
-    };
-  }
-}
+import "jspdf-autotable";
 
 /**
  * Get image through the proxy API to avoid CORS issues
  * @param {string} imageUrl - Original Firebase Storage URL
  * @returns {Promise<string>} - Base64 encoded image data
  */
-const getProxiedImage = async (imageUrl: string): Promise<string> => {
+const getProxiedImage = async (imageUrl) => {
   try {
     // Use our API route to proxy the image request
     const proxyUrl = `/api/image-proxy?url=${encodeURIComponent(imageUrl)}`;
@@ -30,9 +19,9 @@ const getProxiedImage = async (imageUrl: string): Promise<string> => {
     
     // Convert to blob and then to base64
     const blob = await response.blob();
-    return new Promise<string>((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
+      reader.onload = () => resolve(reader.result);
       reader.onerror = reject;
       reader.readAsDataURL(blob);
     });
@@ -44,14 +33,11 @@ const getProxiedImage = async (imageUrl: string): Promise<string> => {
 
 /**
  * Creates and downloads a PDF of the SOP
- * @param {SOPMetadata} metadata - SOP metadata
- * @param {Step[]} steps - SOP steps
+ * @param {Object} metadata - SOP metadata
+ * @param {Array} steps - SOP steps
  * @returns {Promise<boolean>} - Success indicator
  */
-export const createAndDownloadSopPdf = async (
-  metadata: SOPMetadata, 
-  steps: Step[]
-): Promise<boolean> => {
+export const createAndDownloadSopPdf = async (metadata, steps) => {
   try {
     console.log("Starting PDF generation");
     console.log("Metadata:", JSON.stringify(metadata));
@@ -204,8 +190,8 @@ export const createAndDownloadSopPdf = async (
   } catch (error) {
     console.error("Error generating PDF:", error);
     console.error("Error details:", JSON.stringify({
-      message: (error as Error).message,
-      stack: (error as Error).stack
+      message: error.message,
+      stack: error.stack
     }));
     alert("There was an error generating the PDF. Please check the console for details.");
     return false;

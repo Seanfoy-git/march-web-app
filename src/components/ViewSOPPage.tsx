@@ -6,8 +6,8 @@ import { useRouter } from 'next/navigation';
 import { getDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { SOP } from '@/types/sop';
+// Import from JavaScript file
 import { createAndDownloadSopPdf } from '@/utils/pdfUtils';
-// Removed the unused Image import
 
 export default function ViewSOPPage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -50,6 +50,7 @@ export default function ViewSOPPage({ params }: { params: { id: string } }) {
       setExportingPdf(true);
       
       // Generate PDF from current SOP data
+      // @ts-ignore - Using JavaScript function with TypeScript
       await createAndDownloadSopPdf(sop.metadata, sop.steps);
       console.log("PDF generated successfully");
     } catch (error) {
@@ -207,7 +208,7 @@ export default function ViewSOPPage({ params }: { params: { id: string } }) {
                     <div>
                       <h4 className="text-sm font-medium text-gray-500 mb-2">Reference Image</h4>
                       <div className="relative border border-gray-200 rounded-md p-1 min-h-[200px] flex items-center justify-center">
-                        {/* Use regular img tag with proxy API to avoid CORS issues */}
+                        {/* Use our image proxy API to avoid CORS issues */}
                         <img 
                           src={`/api/image-proxy?url=${encodeURIComponent(step.imageUrl)}`}
                           alt={`Step ${index + 1}`}
