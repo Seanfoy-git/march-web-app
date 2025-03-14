@@ -41,6 +41,12 @@ export default function PDFViewPage() {
   }, [metadata]);
 
   const getStepSymbol = (index: number): Symbol => {
+    const step = steps[index];
+    if (step && step.symbolType) {
+      return { type: step.symbolType, color: 'black' };
+    }
+    
+    // Fallback to default symbols if not defined
     if (index % 3 === 0) {
       return { type: 'quality', color: 'red' };
     } else if (index % 3 === 1) {
@@ -58,9 +64,6 @@ export default function PDFViewPage() {
     return <div className="flex items-center justify-center min-h-screen">No SOP data provided.</div>;
   }
 
-  // Generate a unique document ID  commented out as seems to be unused
-  //const documentId = `SOP_${metadata.title.substring(0, 5).replace(/\s+/g, '_')}_${Date.now().toString().substring(8, 13)}`;
-
   return (
     <div className="bg-white p-4 mx-auto max-w-[1000px] print:p-0">
       {/* Print button - only shows on screen, not in print */}
@@ -69,15 +72,16 @@ export default function PDFViewPage() {
           onClick={() => window.print()} 
           className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
         >
-          Print / Save as PDF
+          Create PDF
         </button>
       </div>
       
       {/* Main document that will be printed */}
       <div className="border border-gray-300 p-4 print:border-0">
-        {/* Header */}
+        {/* Header with main SOP title */}
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold">Work Instruction</h1>
+          <h1 className="text-3xl font-bold">{metadata.title}</h1>
+          <h2 className="text-xl mt-2">Work Instruction</h2>
         </div>
         
         {/* Metadata section */}
@@ -104,11 +108,7 @@ export default function PDFViewPage() {
             </div>
           </div>
           
-          <div className="col-span-3 grid grid-cols-1 border-b border-gray-300">
-            <div className="p-2">
-              <p className="text-sm font-semibold">PROFILES (PARTS)</p>
-            </div>
-          </div>
+          {/* PROFILES (PARTS) section removed as requested */}
         </div>
         
         {/* Legend */}
@@ -165,18 +165,20 @@ export default function PDFViewPage() {
                   <td className="border border-gray-300 p-2 text-center align-top">
                     {symbol.type === 'tip' ? (
                       <span className="text-black text-lg">✓</span>
+                    ) : symbol.type === 'hazard' ? (
+                      <div className="w-4 h-4 bg-green-500 flex items-center justify-center mx-auto">
+                        <span className="text-white text-xs">+</span>
+                      </div>
                     ) : (
                       <div 
                         className={`w-4 h-4 rounded-full mx-auto ${
-                          symbol.type === 'quality' ? 'bg-red-500' : 
-                          symbol.type === 'correctness' ? 'bg-black' :
-                          'bg-green-500'
+                          symbol.type === 'quality' ? 'bg-red-500' : 'bg-black'
                         }`}
                       ></div>
                     )}
                   </td>
                   <td className="border border-gray-300 p-2 align-top">
-                    <p>Ensure quality</p>
+                    <p>{step.reasonWhy || 'Ensure quality'}</p>
                   </td>
                   <td className="border border-gray-300 p-2 text-center align-top">
                     <p className="font-bold">{index + 1}.1</p>
@@ -186,6 +188,11 @@ export default function PDFViewPage() {
                           src={step.imageUrl} 
                           alt={`Step ${index + 1}`}
                           className="max-h-full max-w-full object-contain absolute top-0 left-0 right-0 bottom-0 m-auto"
+                          onError={(e) => {
+                            // Handle image loading errors
+                            console.log(`Failed to load image for step ${index + 1}`);
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
                         />
                       </div>
                     ) : (
