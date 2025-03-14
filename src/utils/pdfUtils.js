@@ -1,6 +1,5 @@
 /* eslint-disable */
 // src/utils/pdfUtils.js
-// Disable all ESLint rules for this file to avoid further build issues
 import { jsPDF } from "jspdf";
 import 'jspdf-autotable';
 
@@ -74,30 +73,19 @@ export const createAndDownloadSopPdf = async (metadata, steps) => {
       ["Version", metadata.version || "1.0"]
     ];
 
-    try {
-      // Add table with metadata
-      doc.autoTable({
-        startY: 30,
-        head: [["Field", "Value"]],
-        body: metadataRows,
-        theme: 'grid',
-        headStyles: { fillColor: [59, 130, 246], textColor: [255, 255, 255] },
-        styles: { halign: 'left', fontSize: 10 }
-      });
-    } catch (error) {
-      console.error("Error creating table:", error);
-    }
-
-    // Get current Y position after the table
-    let currentY = 0;
-    try {
-      currentY = doc.lastAutoTable.finalY + 15;
-    } catch (error) {
-      // If lastAutoTable isn't available, start at a reasonable position
-      currentY = 80;
-    }
+    // Add table with metadata
+    doc.autoTable({
+      startY: 30,
+      head: [["Field", "Value"]],
+      body: metadataRows,
+      theme: 'grid',
+      headStyles: { fillColor: [59, 130, 246], textColor: [255, 255, 255] },
+      styles: { halign: 'left', fontSize: 10 }
+    });
 
     // Process images and add steps
+    let currentY = doc.lastAutoTable.finalY + 15;
+
     for (let i = 0; i < validSteps.length; i++) {
       const step = validSteps[i];
       
@@ -157,39 +145,36 @@ export const createAndDownloadSopPdf = async (metadata, steps) => {
             currentY = 20;
           }
           
-          try {
-            // Get image through our proxy to avoid CORS issues
-            const imgData = await getProxiedImage(step.imageUrl);
-            
-            // Add image to PDF (limiting dimensions)
-            const maxWidth = 160; // mm
-            const maxHeight = 80; // mm
-            
-            doc.addImage(
-              imgData, 
-              'JPEG', 
-              20, 
-              currentY,
-              maxWidth, 
-              maxHeight, 
-              undefined, 
-              'FAST'
-            );
-            
-            currentY += maxHeight + 15;
-          } catch (error) {
-            console.error(`Error loading image: ${error.message}`);
-            // Add placeholder for failed image
-            doc.setFillColor(240, 240, 240);
-            doc.rect(20, currentY, 160, 40, 'F');
-            doc.setFontSize(10);
-            doc.setTextColor(100, 100, 100);
-            doc.text('Image not available', 100, currentY + 20, { align: 'center' });
-            currentY += 50;
-          }
+          // Get image through our proxy to avoid CORS issues
+          const imgData = await getProxiedImage(step.imageUrl);
+          
+          // Add image to PDF (limiting dimensions)
+          const maxWidth = 160; // mm
+          const maxHeight = 80; // mm
+          
+          doc.addImage(
+            imgData, 
+            'JPEG', 
+            20, 
+            currentY,
+            maxWidth, 
+            maxHeight, 
+            undefined, 
+            'FAST'
+          );
+          
+          currentY += maxHeight + 15;
+          
         } catch (error) {
-          console.error(`Error processing step ${i + 1}:`, error);
-          currentY += 10;  // Still move down a bit
+          console.error(`Error loading image for step ${i + 1}:`, error);
+          
+          // Add placeholder for failed image
+          doc.setFillColor(240, 240, 240);
+          doc.rect(20, currentY, 160, 40, 'F');
+          doc.setFontSize(10);
+          doc.setTextColor(100, 100, 100);
+          doc.text('Image not available', 100, currentY + 20, { align: 'center' });
+          currentY += 50;
         }
       }
       
