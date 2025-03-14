@@ -50,7 +50,7 @@ export default function ViewSOPPage({ params }: { params: { id: string } }) {
       setExportingPdf(true);
       
       // Generate PDF from current SOP data
-      // @ts-ignore - Using JavaScript function with TypeScript
+      // @ts-expect-error - Using JavaScript function with TypeScript
       await createAndDownloadSopPdf(sop.metadata, sop.steps);
       console.log("PDF generated successfully");
     } catch (error) {
