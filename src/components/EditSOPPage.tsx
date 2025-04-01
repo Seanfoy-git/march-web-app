@@ -362,7 +362,7 @@ const exportToPDF = async () => {
         console.log("Generating PDF with latest data:", latestSop);
         
         // Generate PDF with the latest data
-        createAndDownloadSopPdf(latestSop.metadata, latestSop.steps);
+        createAndDownloadSopPdf(latestSop);
       } else {
         alert('Error: Could not fetch the updated SOP data');
       }
