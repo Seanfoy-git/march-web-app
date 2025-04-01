@@ -269,11 +269,11 @@ export default function NewSOPPage() {
     setIsSaving(true);
     
     try {
-        await addDoc(collection(db, 'sops'), {
-            metadata,
-            steps,
-            createdAt: new Date().toISOString()
-          });
+      await addDoc(collection(db, 'sops'), {
+        metadata,
+        steps,
+        createdAt: new Date().toISOString()
+      });
       
       alert('SOP saved successfully!');
       router.push('/');
@@ -297,7 +297,15 @@ export default function NewSOPPage() {
       return;
     }
     
-    createAndDownloadSopPdf(metadata, steps);
+    // Create a new SOP object that combines metadata and steps
+    const newSop = {
+      id: 'new-sop', // Use a placeholder or generate an ID if needed
+      metadata,
+      steps,
+      createdAt: new Date().toISOString()
+    };
+    
+    createAndDownloadSopPdf(newSop);
   };
 
   // Initialize and cleanup camera
