@@ -1,7 +1,7 @@
 // src/utils/pdfUtils.ts
 import { jsPDF } from 'jspdf'
 import autoTable, { UserOptions } from 'jspdf-autotable'
-import type { SOP } from '@/types/sop'  // Use SOP instead of SOPSOP
+import type { SOP } from '@/types/sop'
 
 // Utility to fetch an image from a URL and convert to base64
 async function getBase64ImageFromUrl(imageUrl: string): Promise<string> {
@@ -47,7 +47,7 @@ export async function createAndDownloadSopPdf(sop: SOP) {
       step.description,             // Key Points (How)
       step.reasonWhy || '',         // Why
       step.symbolType || '',        // Symbol
-      step.imageUrl || ''           // We'll place an image here in a custom draw
+      step.imageUrl || ''           // Image URL (for custom drawing)
     ])
   }
 
@@ -69,28 +69,29 @@ export async function createAndDownloadSopPdf(sop: SOP) {
     styles: { fontSize: 9, cellPadding: 6 },
     headStyles: { fillColor: [230, 230, 230] },
     margin: { left: 40, right: 40 },
-    didDrawCell: async (data) => {
-      // Only handle body cells in the "Image" column (index 5 in this example)
+    didDrawCell: (data) => {
+      // Only handle body cells in the "Image" column (index 5)
       if (data.section === 'body' && data.column.index === 5) {
         const stepIndex = data.row.index
         const step = sop.steps[stepIndex]
         if (step.imageUrl) {
-          try {
-            const base64Img = await getBase64ImageFromUrl(step.imageUrl)
-            const { x, y, width } = data.cell  // Removed "height" as it was unused
-            // Adjust the width/height if needed so the image fits nicely
-            const imgSize = 50
-            doc.addImage(
-              base64Img,
-              'JPEG',
-              x + (width - imgSize) / 2, // center it in the cell
-              y + 2,
-              imgSize,
-              imgSize
-            )
-          } catch (err) {
-            console.error('Image load error:', err)
-          }
+          // Instead of using async/await here, use .then() so the callback returns void
+          getBase64ImageFromUrl(step.imageUrl)
+            .then((base64Img) => {
+              const { x, y, width } = data.cell // Removed unused "height"
+              const imgSize = 50 // Adjust image size as needed
+              doc.addImage(
+                base64Img,
+                'JPEG',
+                x + (width - imgSize) / 2, // center the image in the cell
+                y + 2,
+                imgSize,
+                imgSize
+              )
+            })
+            .catch((err) => {
+              console.error('Image load error:', err)
+            })
         }
       }
     },
