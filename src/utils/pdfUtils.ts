@@ -1,7 +1,7 @@
 // src/utils/pdfUtils.ts
 import { jsPDF } from 'jspdf'
 import autoTable, { UserOptions } from 'jspdf-autotable'
-import { SOPSOP } from '@/types/sop'
+import type { SOP } from '@/types/sop'  // Use SOP instead of SOPSOP
 
 // Utility to fetch an image from a URL and convert to base64
 async function getBase64ImageFromUrl(imageUrl: string): Promise<string> {
@@ -17,7 +17,7 @@ async function getBase64ImageFromUrl(imageUrl: string): Promise<string> {
   })
 }
 
-export async function createAndDownloadSopPdf(sop: SOPSOP) {
+export async function createAndDownloadSopPdf(sop: SOP) {
   // Landscape A4 so we have more horizontal space (change if you prefer portrait)
   const doc = new jsPDF({
     orientation: 'landscape',
