@@ -1,0 +1,7 @@
+[
+  {
+    "origin": ["http://localhost:3000", "vsop-builder.vercel.app"],
+    "method": ["GET", "HEAD", "OPTIONS"],
+    "maxAgeSeconds": 3600
+  }
+]

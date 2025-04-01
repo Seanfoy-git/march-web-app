@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { getDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { SOP } from '@/types/sop';
+// Import from JavaScript file
 import { createAndDownloadSopPdf } from '@/utils/pdfUtils';
 
 export default function ViewSOPPage({ params }: { params: { id: string } }) {
@@ -48,7 +49,7 @@ export default function ViewSOPPage({ params }: { params: { id: string } }) {
     try {
       setExportingPdf(true);
       
-      // Generate PDF from current SOP data
+      // Cast the function to avoid TypeScript errors
       await createAndDownloadSopPdf(sop.metadata, sop.steps);
       console.log("PDF generated successfully");
     } catch (error) {
@@ -125,107 +126,4 @@ export default function ViewSOPPage({ params }: { params: { id: string } }) {
           <h2 className="text-xl font-bold mb-4">SOP Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <p className="text-sm font-medium text-gray-500">Department</p>
-              <p className="text-base font-medium">{sop.metadata.department}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">Author</p>
-              <p className="text-base font-medium">{sop.metadata.author}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">Approver</p>
-              <p className="text-base font-medium">{sop.metadata.approver}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">Created Date</p>
-              <p className="text-base font-medium">{sop.metadata.createdDate}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">Approval Date</p>
-              <p className="text-base font-medium">{sop.metadata.approvalDate || 'Pending'}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">Version</p>
-              <p className="text-base font-medium">{sop.metadata.version}</p>
-            </div>
-          </div>
-        </div>
-        {/* Steps Section */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-xl font-bold mb-4">Steps ({sop.steps.length})</h2>
-          
-          <div className="space-y-6">
-            {sop.steps.map((step, index) => (
-              <div 
-                key={index} 
-                className="border border-gray-200 rounded-md p-6"
-              >
-                <h3 className="text-lg font-medium mb-4">
-                  Step {index + 1}: {step.title}
-                </h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    {step.description && (
-                      <div className="mb-4">
-                        <h4 className="text-sm font-medium text-gray-500 mb-2">Description</h4>
-                        <p className="text-gray-800 whitespace-pre-line">{step.description}</p>
-                      </div>
-                    )}
-                    
-                    {step.reasonWhy && (
-                      <div className="mb-4">
-                        <h4 className="text-sm font-medium text-gray-500 mb-2">Reason Why</h4>
-                        <p className="text-gray-800 whitespace-pre-line">{step.reasonWhy}</p>
-                      </div>
-                    )}
-                    
-                    {step.symbolType && (
-                      <div>
-                        <h4 className="text-sm font-medium text-gray-500 mb-2">Symbol Type</h4>
-                        <div className="flex items-center">
-                          <span className="text-gray-800 capitalize">{step.symbolType}</span>
-                          {step.symbolType === 'hazard' && (
-                            <span className="ml-2 bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs">⚠️ Hazard</span>
-                          )}
-                          {step.symbolType === 'tip' && (
-                            <span className="ml-2 bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">💡 Tip</span>
-                          )}
-                          {step.symbolType === 'quality' && (
-                            <span className="ml-2 bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">✓ Quality</span>
-                          )}
-                          {step.symbolType === 'correctness' && (
-                            <span className="ml-2 bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs">✓ Correctness</span>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {step.imageUrl && (
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-500 mb-2">Reference Image</h4>
-                      <div className="relative border border-gray-200 rounded-md p-1 min-h-[200px] flex items-center justify-center">
-                        {/* Use the image proxy API to avoid CORS issues */}
-                        <img 
-                          src={`/api/image-proxy?url=${encodeURIComponent(step.imageUrl)}`}
-                          alt={`Step ${index + 1}`}
-                          className="max-w-full max-h-64 object-contain"
-                          onError={(e) => {
-                            console.error(`Error loading image for step ${index + 1}`);
-                            (e.currentTarget as HTMLImageElement).src = '/placeholder-image.svg';
-                            (e.currentTarget as HTMLImageElement).alt = 'Image not available';
-                          }}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </main>
-  );
-}
+              <p className="text-sm font-medium text-gray-500">Department</p

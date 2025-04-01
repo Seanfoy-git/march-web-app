@@ -1,4 +1,4 @@
-// pdfUtils.ts
+// src/utils/pdfUtils.ts
 import { jsPDF } from 'jspdf'
 import autoTable, { UserOptions } from 'jspdf-autotable'
 import { SOPSOP } from '@/types/sop'
@@ -17,7 +17,7 @@ async function getBase64ImageFromUrl(imageUrl: string): Promise<string> {
   })
 }
 
-export async function generatePDF(sop: SOPSOP) {
+export async function createAndDownloadSopPdf(sop: SOPSOP) {
   // Landscape A4 so we have more horizontal space (change if you prefer portrait)
   const doc = new jsPDF({
     orientation: 'landscape',
@@ -62,7 +62,6 @@ export async function generatePDF(sop: SOPSOP) {
   ]
 
   // Use jspdf-autotable with a custom cell drawing to embed images
-  // This is optional—if you don’t need images in the table, you can remove the "didDrawCell" part.
   const autoTableOptions: UserOptions = {
     startY: 180,
     head: [tableColumns.map(col => col.header)],
@@ -78,7 +77,7 @@ export async function generatePDF(sop: SOPSOP) {
         if (step.imageUrl) {
           try {
             const base64Img = await getBase64ImageFromUrl(step.imageUrl)
-            const { x, y, width, height } = data.cell
+            const { x, y, width } = data.cell  // Removed "height" as it was unused
             // Adjust the width/height if needed so the image fits nicely
             const imgSize = 50
             doc.addImage(
@@ -99,9 +98,6 @@ export async function generatePDF(sop: SOPSOP) {
 
   autoTable(doc, autoTableOptions)
 
-  // Output or return the PDF
-  // e.g. doc.save(`${sop.metadata.title || 'SOP'}.pdf`)
-  // Or if you need the PDF data as a blob/base64 for uploading, do:
-  // return doc.output('blob')
+  // Save the PDF with the SOP title as the filename
   doc.save(`${sop.metadata.title || 'SOP'}.pdf`)
 }
