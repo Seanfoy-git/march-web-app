@@ -18,14 +18,14 @@ async function getBase64ImageFromUrl(imageUrl: string): Promise<string> {
 }
 
 export async function createAndDownloadSopPdf(sop: SOP) {
-  // Landscape A4 so we have more horizontal space (change if you prefer portrait)
+  // Create the PDF document (landscape A4)
   const doc = new jsPDF({
     orientation: 'landscape',
     unit: 'pt',
     format: 'A4',
   })
 
-  // Title + Basic Info
+  // Add SOP metadata at the top
   doc.setFontSize(18)
   doc.text(sop.metadata.title || 'Untitled SOP', 40, 50)
 
@@ -37,18 +37,32 @@ export async function createAndDownloadSopPdf(sop: SOP) {
   doc.text(`Approval Date: ${sop.metadata.approvalDate}`, 40, 130)
   doc.text(`Version: ${sop.metadata.version}`, 40, 145)
 
-  // Prepare table rows
-  const bodyRows = [];
+  // Preload images for each step that has an imageUrl
+  const preloadedImages: Record<number, string> = {}
+  await Promise.all(
+    sop.steps.map(async (step, i) => {
+      if (step.imageUrl) {
+        try {
+          preloadedImages[i] = await getBase64ImageFromUrl(step.imageUrl)
+        } catch (err) {
+          console.error(`Error preloading image for step ${i}`, err)
+        }
+      }
+    })
+  )
+
+  // Prepare table rows from steps
+  const bodyRows = []
   for (let i = 0; i < sop.steps.length; i++) {
-    const step = sop.steps[i];
+    const step = sop.steps[i]
     bodyRows.push([
-      (i + 1).toString(),  // Step #
-      step.title,          // What (Title)
-      step.description,    // Key Points (How)
-      step.reasonWhy || '',// Why
-      step.symbolType || '',// Symbol
-      step.imageUrl || ''  // Image URL (for custom drawing)
-    ]);
+      (i + 1).toString(),           // Step #
+      step.title,                   // What (Title)
+      step.description,             // Key Points (How)
+      step.reasonWhy || '',         // Why
+      step.symbolType || '',        // Symbol
+      step.imageUrl || ''           // We'll use the preloaded image in didDrawCell
+    ])
   }
 
   // Define table columns
@@ -59,9 +73,9 @@ export async function createAndDownloadSopPdf(sop: SOP) {
     { header: 'Why', dataKey: 'why' },
     { header: 'Symbol', dataKey: 'symbol' },
     { header: 'Image', dataKey: 'image' },
-  ];
+  ]
 
-  // Use jspdf-autotable with a custom cell drawing to embed images
+  // Configure autoTable options including the synchronous didDrawCell callback
   const autoTableOptions: UserOptions = {
     startY: 180,
     head: [tableColumns.map(col => col.header)],
@@ -70,36 +84,28 @@ export async function createAndDownloadSopPdf(sop: SOP) {
     headStyles: { fillColor: [230, 230, 230] },
     margin: { left: 40, right: 40 },
     didDrawCell: (data) => {
-      // Only handle body cells in the "Image" column (index 5)
+      // Only process cells in the "Image" column (index 5) of the body
       if (data.section === 'body' && data.column.index === 5 && data.cell) {
-        const stepIndex = data.row.index;
-        const step = sop.steps[stepIndex];
-        if (step.imageUrl) {
-          getBase64ImageFromUrl(step.imageUrl)
-            .then((base64Img) => {
-              if (data.cell && data.cell.x !== undefined && data.cell.width !== undefined && data.cell.y !== undefined) {
-                const { x, y, width } = data.cell;
-                const imgSize = 50; // Adjust image size as needed
-                doc.addImage(
-                  base64Img,
-                  'JPEG',
-                  x + (width - imgSize) / 2, // center the image in the cell
-                  y + 2,
-                  imgSize,
-                  imgSize
-                );
-              }
-            })
-            .catch((err) => {
-              console.error('Image load error:', err);
-            });
+        const stepIndex = data.row.index
+        if (preloadedImages[stepIndex]) {
+          const { x, y, width } = data.cell
+          const imgSize = 50 // Adjust size as needed
+          doc.addImage(
+            preloadedImages[stepIndex],
+            'JPEG',
+            x + (width - imgSize) / 2,
+            y + 2,
+            imgSize,
+            imgSize
+          )
         }
       }
     },
-  };
+  }
 
-  autoTable(doc, autoTableOptions);
+  // Draw the table into the document
+  autoTable(doc, autoTableOptions)
 
-  // Save the PDF with the SOP title as the filename
-  doc.save(`${sop.metadata.title || 'SOP'}.pdf`);
+  // Save/download the PDF
+  doc.save(`${sop.metadata.title || 'SOP'}.pdf`)
 }
