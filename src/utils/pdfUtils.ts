@@ -38,17 +38,17 @@ export async function createAndDownloadSopPdf(sop: SOP) {
   doc.text(`Version: ${sop.metadata.version}`, 40, 145)
 
   // Prepare table rows
-  const bodyRows = []
+  const bodyRows = [];
   for (let i = 0; i < sop.steps.length; i++) {
-    const step = sop.steps[i]
+    const step = sop.steps[i];
     bodyRows.push([
-      (i + 1).toString(),           // Step #
-      step.title,                   // What (Title)
-      step.description,             // Key Points (How)
-      step.reasonWhy || '',         // Why
-      step.symbolType || '',        // Symbol
-      step.imageUrl || ''           // Image URL (for custom drawing)
-    ])
+      (i + 1).toString(),  // Step #
+      step.title,          // What (Title)
+      step.description,    // Key Points (How)
+      step.reasonWhy || '',// Why
+      step.symbolType || '',// Symbol
+      step.imageUrl || ''  // Image URL (for custom drawing)
+    ]);
   }
 
   // Define table columns
@@ -59,7 +59,7 @@ export async function createAndDownloadSopPdf(sop: SOP) {
     { header: 'Why', dataKey: 'why' },
     { header: 'Symbol', dataKey: 'symbol' },
     { header: 'Image', dataKey: 'image' },
-  ]
+  ];
 
   // Use jspdf-autotable with a custom cell drawing to embed images
   const autoTableOptions: UserOptions = {
@@ -71,34 +71,35 @@ export async function createAndDownloadSopPdf(sop: SOP) {
     margin: { left: 40, right: 40 },
     didDrawCell: (data) => {
       // Only handle body cells in the "Image" column (index 5)
-      if (data.section === 'body' && data.column.index === 5) {
-        const stepIndex = data.row.index
-        const step = sop.steps[stepIndex]
+      if (data.section === 'body' && data.column.index === 5 && data.cell) {
+        const stepIndex = data.row.index;
+        const step = sop.steps[stepIndex];
         if (step.imageUrl) {
-          // Instead of using async/await here, use .then() so the callback returns void
           getBase64ImageFromUrl(step.imageUrl)
             .then((base64Img) => {
-              const { x, y, width } = data.cell // Removed unused "height"
-              const imgSize = 50 // Adjust image size as needed
-              doc.addImage(
-                base64Img,
-                'JPEG',
-                x + (width - imgSize) / 2, // center the image in the cell
-                y + 2,
-                imgSize,
-                imgSize
-              )
+              if (data.cell && data.cell.x !== undefined && data.cell.width !== undefined && data.cell.y !== undefined) {
+                const { x, y, width } = data.cell;
+                const imgSize = 50; // Adjust image size as needed
+                doc.addImage(
+                  base64Img,
+                  'JPEG',
+                  x + (width - imgSize) / 2, // center the image in the cell
+                  y + 2,
+                  imgSize,
+                  imgSize
+                );
+              }
             })
             .catch((err) => {
-              console.error('Image load error:', err)
-            })
+              console.error('Image load error:', err);
+            });
         }
       }
     },
-  }
+  };
 
-  autoTable(doc, autoTableOptions)
+  autoTable(doc, autoTableOptions);
 
   // Save the PDF with the SOP title as the filename
-  doc.save(`${sop.metadata.title || 'SOP'}.pdf`)
+  doc.save(`${sop.metadata.title || 'SOP'}.pdf`);
 }
