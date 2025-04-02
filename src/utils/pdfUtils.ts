@@ -18,7 +18,7 @@ async function getBase64ImageFromUrl(imageUrl: string): Promise<string> {
 }
 
 export async function createAndDownloadSopPdf(sop: SOP) {
-  // Create the PDF document (landscape A4)
+  // Create PDF document (landscape A4)
   const doc = new jsPDF({
     orientation: 'landscape',
     unit: 'pt',
@@ -37,7 +37,7 @@ export async function createAndDownloadSopPdf(sop: SOP) {
   doc.text(`Approval Date: ${sop.metadata.approvalDate}`, 40, 130)
   doc.text(`Version: ${sop.metadata.version}`, 40, 145)
 
-  // Preload images for each step that has an imageUrl
+  // Preload images for steps that have an imageUrl
   const preloadedImages: Record<number, string> = {}
   await Promise.all(
     sop.steps.map(async (step, i) => {
@@ -45,23 +45,23 @@ export async function createAndDownloadSopPdf(sop: SOP) {
         try {
           preloadedImages[i] = await getBase64ImageFromUrl(step.imageUrl)
         } catch (err) {
-          console.error(`Error preloading image for step ${i}`, err)
+          console.error(`Error preloading image for step ${i}:`, err)
         }
       }
     })
   )
 
-  // Prepare table rows from steps
+  // Prepare table rows ensuring each cell value is defined
   const bodyRows = []
   for (let i = 0; i < sop.steps.length; i++) {
     const step = sop.steps[i]
     bodyRows.push([
-      (i + 1).toString(),           // Step #
-      step.title,                   // What (Title)
-      step.description,             // Key Points (How)
-      step.reasonWhy || '',         // Why
-      step.symbolType || '',        // Symbol
-      step.imageUrl || ''           // We'll use the preloaded image in didDrawCell
+      (i + 1).toString(),
+      step.title || '',
+      step.description || '',
+      step.reasonWhy || '',
+      step.symbolType || '',
+      step.imageUrl ? step.imageUrl : ''  // Use empty string if no imageUrl
     ])
   }
 
@@ -75,7 +75,7 @@ export async function createAndDownloadSopPdf(sop: SOP) {
     { header: 'Image', dataKey: 'image' },
   ]
 
-  // Configure autoTable options including the synchronous didDrawCell callback
+  // Configure autoTable options with synchronous cell drawing using preloaded images
   const autoTableOptions: UserOptions = {
     startY: 180,
     head: [tableColumns.map(col => col.header)],
@@ -84,12 +84,12 @@ export async function createAndDownloadSopPdf(sop: SOP) {
     headStyles: { fillColor: [230, 230, 230] },
     margin: { left: 40, right: 40 },
     didDrawCell: (data) => {
-      // Only process cells in the "Image" column (index 5) of the body
+      // Process cells in the "Image" column (index 5) of the body
       if (data.section === 'body' && data.column.index === 5 && data.cell) {
-        const stepIndex = data.row.index
+        const stepIndex = data.row.index;
         if (preloadedImages[stepIndex]) {
-          const { x, y, width } = data.cell
-          const imgSize = 50 // Adjust size as needed
+          const { x, y, width } = data.cell;
+          const imgSize = 50; // Adjust size if needed
           doc.addImage(
             preloadedImages[stepIndex],
             'JPEG',
@@ -97,13 +97,12 @@ export async function createAndDownloadSopPdf(sop: SOP) {
             y + 2,
             imgSize,
             imgSize
-          )
+          );
         }
       }
     },
   }
 
-  // Draw the table into the document
   autoTable(doc, autoTableOptions)
 
   // Save/download the PDF
